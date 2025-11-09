@@ -7,30 +7,32 @@
 <style>
   :root{
     --bg:#0b0d10; --card:#12161c; --muted:#9aa4b2; --text:#e6edf3; --accent:#ffc24a;
-    --ok:#20c997; --line:#222a33;
+    --line:#222a33;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
-  .wrap{max-width:920px;margin:32px auto;padding:0 16px}
+  .wrap{max-width:1100px;margin:32px auto;padding:0 16px}
   header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
   h1{font-size:20px;margin:0}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 0 0 1px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.25)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:900px){ .two-col{grid-template-columns:1fr} }
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 0 0 1px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.25)}
+  .muted{color:var(--muted)}
   .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-  .col-4{grid-column:span 4} .col-6{grid-column:span 6} .col-12{grid-column:span 12}
+  .col-6{grid-column:span 6} .col-12{grid-column:span 12}
   label{display:block;font-weight:600;margin:8px 0 6px}
-  input,select{width:100%;background:#0f1318;border:1px solid var(--line);color:var(--text);
+  input{width:100%;background:#0f1318;border:1px solid var(--line);color:var(--text);
     border-radius:10px;padding:10px 12px;outline:none}
   input:focus{border-color:#2b86ff}
-  .muted{color:var(--muted)}
   .btn{cursor:pointer;background:#1a2330;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
   .btn:hover{border-color:#2b86ff}
-  .stats{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:12px}
-  .stat{grid-column:span 6;background:#0f1318;border:1px solid var(--line);border-radius:12px;padding:14px}
-  .stat .label{font-size:13px;color:var(--muted);margin-bottom:4px}
-  .stat .value{font-size:22px;font-weight:800}
-  .sidenote{margin-top:10px;color:var(--muted);font-size:12px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media (max-width:560px){ .stats{grid-template-columns:1fr} }
+  .stat{background:#0f1318;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .label{font-size:13px;color:var(--muted);margin-bottom:4px}
+  .value{font-size:22px;font-weight:800}
   .accent{color:var(--accent)}
-  @media (max-width:640px){ .stat{grid-column:span 12} }
+  .sidenote{margin-top:10px;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
@@ -40,99 +42,132 @@
       <h1>Final Stand Remastered — Damage Calculator</h1>
     </header>
 
-    <div class="card">
-      <h2 style="margin:0 0 6px">Melee Damage (4×M1)</h2>
-      <div class="muted" style="margin-bottom:8px">
-        Level bonus uses your testing (+0.10 p.p./level). A 0.95 scaling fix is applied to match in-game results.
+    <div class="two-col">
+      <!-- MELEE CARD -->
+      <div class="card">
+        <h2 style="margin:0 0 6px">Melee Damage (4×M1)</h2>
+        <div class="muted" style="margin-bottom:8px">
+          Uses your tested scaling (includes ×0.95 in-game correction).
+        </div>
+
+        <div class="grid">
+          <div class="col-6">
+            <label>Melee</label>
+            <input id="melee" type="number" min="0" step="1" value="100">
+          </div>
+          <div class="col-6">
+            <label>Level</label>
+            <input id="levelM" type="number" min="0" step="1" value="100">
+          </div>
+        </div>
+
+        <div style="margin-top:12px"><button class="btn" id="calcMelee">Calculate</button></div>
+
+        <div class="stats">
+          <div class="stat"><div class="label">Full M1 combo damage</div><div class="value accent" id="m_total">–</div></div>
+          <div class="stat"><div class="label">Single hit damage</div><div class="value" id="m_hit">–</div></div>
+          <div class="stat"><div class="label">DMG increase by Level</div><div class="value" id="m_lvl">–</div></div>
+          <div class="stat"><div class="label">DMG increase by Melee stat</div><div class="value" id="m_melee">–</div></div>
+        </div>
+
+        <div class="sidenote">* Extra M1’s from <b>Speed</b> don’t do extra damage.</div>
       </div>
 
-      <!-- Inputs -->
-      <div class="grid">
-        <div class="col-6">
-          <label>Melee</label>
-          <input id="melee" type="number" min="0" step="1" value="100">
+      <!-- KI CARD -->
+      <div class="card">
+        <h2 style="margin:0 0 6px">Ki Damage (Basic Blasts)</h2>
+        <div class="muted" style="margin-bottom:8px">
+          Fitted to your Ki tests (includes ×0.95 correction).
         </div>
-        <div class="col-6">
-          <label>Level</label>
-          <input id="level" type="number" min="0" step="1" value="100">
-        </div>
-      </div>
 
-      <div style="margin-top:12px">
-        <button class="btn" id="calcBtn">Calculate</button>
-      </div>
+        <div class="grid">
+          <div class="col-6">
+            <label>Ki</label>
+            <input id="ki" type="number" min="0" step="1" value="150">
+          </div>
+          <div class="col-6">
+            <label>Level</label>
+            <input id="levelK" type="number" min="0" step="1" value="100">
+          </div>
+        </div>
 
-      <!-- Results -->
-      <div class="stats">
-        <div class="stat">
-          <div class="label">Full M1 combo damage</div>
-          <div class="value accent" id="outTotal">–</div>
-        </div>
-        <div class="stat">
-          <div class="label">Single hit damage</div>
-          <div class="value" id="outHit">–</div>
-        </div>
-        <div class="stat">
-          <div class="label">DMG increase by Level</div>
-          <div class="value" id="outLvl">–</div>
-        </div>
-        <div class="stat">
-          <div class="label">DMG increase by Melee stat</div>
-          <div class="value" id="outMelee">–</div>
-        </div>
-      </div>
+        <div style="margin-top:12px"><button class="btn" id="calcKi">Calculate</button></div>
 
-      <div class="sidenote">* Extra M1’s from <b>Speed</b> don’t do extra damage.</div>
+        <div class="stats">
+          <div class="stat"><div class="label">Full basic-blast combo damage</div><div class="value accent" id="k_total">–</div></div>
+          <div class="stat"><div class="label">Single blast damage</div><div class="value" id="k_hit">–</div></div>
+          <div class="stat"><div class="label">DMG increase by Level</div><div class="value" id="k_lvl">–</div></div>
+          <div class="stat"><div class="label">DMG increase by Ki stat</div><div class="value" id="k_ki">–</div></div>
+        </div>
+
+        <div class="sidenote">* Extra M1’s from <b>Speed</b> don’t do extra damage.</div>
+      </div>
     </div>
 
-    <!-- Ki section placeholder -->
-    <div class="card">
-      <h2 style="margin:0 0 6px">Ki Damage (coming next)</h2>
-      <div class="muted">We’ll fit this once you send the Ki dataset.</div>
-    </div>
-
-    <div class="muted" style="margin-top:6px">No tracking. All math client-side.</div>
+    <div class="muted" style="margin-top:12px">No tracking. All math runs locally in your browser.</div>
   </div>
 
 <script>
-/**
- * Hidden model constants (from your testing):
- * Base combo intercept = 14.8 p.p.
- * Melee term = 0.35 * Melee^0.71
- * Level bonus = +0.10 p.p. per level
- * Global scaling fix = ×0.95 (matches in-game)
- */
-const BASE = 14.8;
-const COEF = 0.35;
-const EXP  = 0.71;
-const LVL_PP = 0.10;
-const SCALE = 0.95;
+  // ---- Formatting helper
+  const fmt = x => (Number.isFinite(x)? x.toFixed(2)+'%' : '–');
 
-function fmt(x){ return Number.isFinite(x) ? x.toFixed(2) + '%' : '–'; }
+  // ---- Constants (from your tests)
+  const SCALE = 0.95;
 
-function calc(){
-  const melee = Math.max(0, parseFloat(document.getElementById('melee').value || 0));
-  const level = Math.max(0, parseFloat(document.getElementById('level').value || 0));
+  // Melee model (4×M1)
+  const M_BASE = 14.8;
+  const M_COEF = 0.35;
+  const M_EXP  = 0.71;
+  const M_LVL  = 0.10; // p.p. per level (combo)
 
-  // Components (scaled to match in-game)
-  const meleeExtraRaw = COEF * Math.pow(melee, EXP);
-  const levelBonusRaw = LVL_PP * level;
+  function calcMelee(){
+    const melee = Math.max(0, parseFloat(document.getElementById('melee').value || 0));
+    const level = Math.max(0, parseFloat(document.getElementById('levelM').value || 0));
 
-  const meleeExtra = SCALE * meleeExtraRaw;    // DMG increase by Melee stat (combo p.p.)
-  const levelBonus = SCALE * levelBonusRaw;    // DMG increase by Level (combo p.p.)
+    const extraMelee_raw = M_COEF * Math.pow(melee, M_EXP);
+    const lvlBonus_raw   = M_LVL  * level;
 
-  const totalCombo = SCALE * (BASE + meleeExtraRaw + levelBonusRaw); // Full combo %
-  const perHit = totalCombo / 4;
+    const extraMelee = SCALE * extraMelee_raw; // DMG increase by Melee (combo)
+    const lvlBonus   = SCALE * lvlBonus_raw;   // DMG increase by Level (combo)
+    const totalCombo = SCALE * (M_BASE + extraMelee_raw + lvlBonus_raw);
+    const perHit     = totalCombo / 4;
 
-  // Outputs
-  document.getElementById('outTotal').textContent = fmt(totalCombo);
-  document.getElementById('outHit').textContent   = fmt(perHit);
-  document.getElementById('outLvl').textContent   = fmt(levelBonus);
-  document.getElementById('outMelee').textContent = fmt(meleeExtra);
-}
+    document.getElementById('m_total').textContent = fmt(totalCombo);
+    document.getElementById('m_hit').textContent   = fmt(perHit);
+    document.getElementById('m_lvl').textContent   = fmt(lvlBonus);
+    document.getElementById('m_melee').textContent = fmt(extraMelee);
+  }
 
-document.getElementById('calcBtn').addEventListener('click', calc);
-calc(); // initial render
+  // Ki model (Basic Blasts, 4-hit combo style aggregation)
+  // Ki Combo % ≈ 0.95 × ( 19.9 + 0.0101 × Ki^1.46 + 0.0111 × Level )
+  const K_BASE = 19.9;
+  const K_COEF = 0.0101;
+  const K_EXP  = 1.46;
+  const K_LVL  = 0.0111; // p.p. per level (combo, pre-scale)
+
+  function calcKi(){
+    const ki    = Math.max(0, parseFloat(document.getElementById('ki').value || 0));
+    const level = Math.max(0, parseFloat(document.getElementById('levelK').value || 0));
+
+    const extraKi_raw = K_COEF * Math.pow(ki, K_EXP);
+    const lvlBonus_raw = K_LVL * level;
+
+    const extraKi   = SCALE * extraKi_raw;     // DMG increase by Ki (combo)
+    const lvlBonus  = SCALE * lvlBonus_raw;    // DMG increase by Level (combo)
+    const totalCombo = SCALE * (K_BASE + extraKi_raw + lvlBonus_raw);
+    const perHit     = totalCombo / 4;
+
+    document.getElementById('k_total').textContent = fmt(totalCombo);
+    document.getElementById('k_hit').textContent   = fmt(perHit);
+    document.getElementById('k_lvl').textContent   = fmt(lvlBonus);
+    document.getElementById('k_ki').textContent    = fmt(extraKi);
+  }
+
+  // Bind + initial render
+  document.getElementById('calcMelee').addEventListener('click', calcMelee);
+  document.getElementById('calcKi').addEventListener('click', calcKi);
+  calcMelee(); calcKi();
 </script>
 </body>
 </html>
+
