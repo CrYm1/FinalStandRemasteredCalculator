@@ -1,172 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Final Stand Remastered — Damage Calculator</title>
-  <style>
-    :root{
-      --bg:#0b0d10; --card:#12161c; --muted:#9aa4b2; --text:#e6edf3; --accent:#ffc24a;
-      --ok:#20c997; --warn:#ffb020; --bad:#ff6b6b; --line:#222a33;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
-    .wrap{max-width:980px;margin:32px auto;padding:0 16px}
-    header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
-    h1{font-size:20px;margin:0}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 0 0 1px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.25)}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-    .col-6{grid-column:span 6} .col-4{grid-column:span 4} .col-8{grid-column:span 8} .col-12{grid-column:span 12}
-    label{display:block;font-weight:600;margin:8px 0 6px}
-    input,select{width:100%;background:#0f1318;border:1px solid var(--line);color:var(--text);
-      border-radius:10px;padding:10px 12px;outline:none}
-    input:focus{border-color:#2b86ff}
-    .muted{color:var(--muted)}
-    .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .stat{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;background:#0f1318;border:1px solid var(--line);border-radius:10px}
-    .stat b{font-size:16px}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#0f1318}
-    .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
-    .footer{color:var(--muted);font-size:12px;margin-top:6px}
-    code{background:#0f1318;border:1px solid var(--line);border-radius:8px;padding:2px 6px}
-    .btn{cursor:pointer;background:#1a2330;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
-    .btn:hover{border-color:#2b86ff}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Final Stand Remastered — Damage Calculator</title>
+<style>
+  :root{
+    --bg:#0b0d10; --card:#12161c; --muted:#9aa4b2; --text:#e6edf3; --accent:#ffc24a;
+    --ok:#20c997; --line:#222a33;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+  .wrap{max-width:920px;margin:32px auto;padding:0 16px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  h1{font-size:20px;margin:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 0 0 1px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.25)}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  .col-4{grid-column:span 4} .col-6{grid-column:span 6} .col-12{grid-column:span 12}
+  label{display:block;font-weight:600;margin:8px 0 6px}
+  input,select{width:100%;background:#0f1318;border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:10px 12px;outline:none}
+  input:focus{border-color:#2b86ff}
+  .muted{color:var(--muted)}
+  .btn{cursor:pointer;background:#1a2330;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+  .btn:hover{border-color:#2b86ff}
+  .stats{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:12px}
+  .stat{grid-column:span 6;background:#0f1318;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .label{font-size:13px;color:var(--muted);margin-bottom:4px}
+  .stat .value{font-size:22px;font-weight:800}
+  .sidenote{margin-top:10px;color:var(--muted);font-size:12px}
+  .accent{color:var(--accent)}
+  @media (max-width:640px){ .stat{grid-column:span 12} }
+</style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 17h8M4 13h12M4 9h16" stroke="#ffc24a" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 17h8M4 13h12M4 9h16" stroke="#ffc24a" stroke-width="2" stroke-linecap="round"/></svg>
       <h1>Final Stand Remastered — Damage Calculator</h1>
     </header>
 
-    <!-- Melee Card -->
     <div class="card">
-      <h2 style="margin:0 0 4px">Melee Damage (4×M1)</h2>
-      <div class="muted">Includes your scaling fix (×0.95). Level bonus excluded here unless you enable it.</div>
+      <h2 style="margin:0 0 6px">Melee Damage (4×M1)</h2>
+      <div class="muted" style="margin-bottom:8px">
+        Level bonus uses your testing (+0.10 p.p./level). A 0.95 scaling fix is applied to match in-game results.
+      </div>
 
-      <div class="grid" style="margin-top:10px">
-        <div class="col-4">
+      <!-- Inputs -->
+      <div class="grid">
+        <div class="col-6">
           <label>Melee</label>
           <input id="melee" type="number" min="0" step="1" value="100">
         </div>
-        <div class="col-4">
+        <div class="col-6">
           <label>Level</label>
           <input id="level" type="number" min="0" step="1" value="100">
         </div>
-        <div class="col-4">
-          <label>Apply Level Bonus?</label>
-          <select id="applyLevel">
-            <option value="yes" selected>Yes (0.10 p.p./level)</option>
-            <option value="no">No (Melee scaling only)</option>
-          </select>
-        </div>
-
-        <div class="col-4">
-          <label>Base intercept (combo %)</label>
-          <input id="base" type="number" step="0.01" value="14.8">
-        </div>
-        <div class="col-4">
-          <label>Melee coefficient</label>
-          <input id="coef" type="number" step="0.01" value="0.35">
-        </div>
-        <div class="col-4">
-          <label>Melee exponent</label>
-          <input id="exp" type="number" step="0.01" value="0.71">
-        </div>
-
-        <div class="col-4">
-          <label>Level bonus (p.p. per level)</label>
-          <input id="lvlpp" type="number" step="0.01" value="0.10">
-        </div>
-        <div class="col-4">
-          <label>Scaling correction (×)</label>
-          <input id="scale" type="number" step="0.01" value="0.95">
-        </div>
-        <div class="col-4">
-          <label>“Worth it” threshold (p.p. per +1 Melee)</label>
-          <input id="threshold" type="number" step="0.01" value="0.05">
-        </div>
       </div>
 
-      <div class="row" style="margin-top:12px">
+      <div style="margin-top:12px">
         <button class="btn" id="calcBtn">Calculate</button>
-        <span class="muted">Tip: tweak constants to match new testing.</span>
       </div>
 
-      <div class="grid" style="margin-top:12px">
-        <div class="col-6 stat"><span>Total combo damage</span><b id="outTotal">–</b></div>
-        <div class="col-6 stat"><span>Per hit</span><b id="outHit">–</b></div>
-        <div class="col-6 stat"><span>Extra vs 0 Melee (combo)</span><b id="outExtra">–</b></div>
-        <div class="col-6 stat"><span>Level bonus (combo)</span><b id="outLvl">–</b></div>
-        <div class="col-6 stat"><span>Marginal gain / +1 Melee</span><b id="outMarg">–</b></div>
-        <div class="col-6 stat"><span>“Worth it” up to</span><b id="outWorth">–</b></div>
+      <!-- Results -->
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Full M1 combo damage</div>
+          <div class="value accent" id="outTotal">–</div>
+        </div>
+        <div class="stat">
+          <div class="label">Single hit damage</div>
+          <div class="value" id="outHit">–</div>
+        </div>
+        <div class="stat">
+          <div class="label">DMG increase by Level</div>
+          <div class="value" id="outLvl">–</div>
+        </div>
+        <div class="stat">
+          <div class="label">DMG increase by Melee stat</div>
+          <div class="value" id="outMelee">–</div>
+        </div>
       </div>
 
-      <div class="footer">
-        Formula: <code>scaled × ( base + coef × melee^exp + (apply? level × lvlPP : 0) )</code>
-        • Marginal gain ≈ derivative at your Melee (combo p.p. per +1 Melee).
-      </div>
+      <div class="sidenote">* Extra M1’s from <b>Speed</b> don’t do extra damage.</div>
     </div>
 
-    <!-- Ki placeholder -->
+    <!-- Ki section placeholder -->
     <div class="card">
-      <h2 style="margin:0 0 4px">Ki Damage (coming next)</h2>
-      <div class="muted">Paste your Ki dataset later and we’ll fit a curve here (optionally with the same level bonus).</div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn" disabled>Paste & Fit (soon)</button>
-        <span class="pill">Model WIP</span>
-      </div>
+      <h2 style="margin:0 0 6px">Ki Damage (coming next)</h2>
+      <div class="muted">We’ll fit this once you send the Ki dataset.</div>
     </div>
 
-    <div class="footer">Built for your testing flow. No cookies, no tracking—just math.</div>
+    <div class="muted" style="margin-top:6px">No tracking. All math client-side.</div>
   </div>
 
-  <script>
-    function clamp(x, lo, hi){ return Math.max(lo, Math.min(hi, x)); }
+<script>
+/**
+ * Hidden model constants (from your testing):
+ * Base combo intercept = 14.8 p.p.
+ * Melee term = 0.35 * Melee^0.71
+ * Level bonus = +0.10 p.p. per level
+ * Global scaling fix = ×0.95 (matches in-game)
+ */
+const BASE = 14.8;
+const COEF = 0.35;
+const EXP  = 0.71;
+const LVL_PP = 0.10;
+const SCALE = 0.95;
 
-    function calc(){
-      const melee = parseFloat(document.getElementById('melee').value || 0);
-      const level = parseFloat(document.getElementById('level').value || 0);
-      const base  = parseFloat(document.getElementById('base').value || 0);
-      const coef  = parseFloat(document.getElementById('coef').value || 0);
-      const exp   = parseFloat(document.getElementById('exp').value || 0);
-      const lvlpp = parseFloat(document.getElementById('lvlpp').value || 0);
-      const scale = parseFloat(document.getElementById('scale').value || 1);
-      const applyLevel = document.getElementById('applyLevel').value === 'yes';
-      const thresh = parseFloat(document.getElementById('threshold').value || 0.05);
+function fmt(x){ return Number.isFinite(x) ? x.toFixed(2) + '%' : '–'; }
 
-      // Core numbers
-      const extraMelee = coef * Math.pow(Math.max(melee,0), exp);
-      const levelBonus = (applyLevel ? lvlpp * Math.max(level,0) : 0);
-      const totalCombo = scale * (base + extraMelee + levelBonus);
-      const perHit = totalCombo / 4;
+function calc(){
+  const melee = Math.max(0, parseFloat(document.getElementById('melee').value || 0));
+  const level = Math.max(0, parseFloat(document.getElementById('level').value || 0));
 
-      // Marginal gain d/dM (combo p.p. per +1 Melee), scaled
-      const marginal = scale * (coef * exp * Math.pow(Math.max(melee,1e-9), exp - 1));
+  // Components (scaled to match in-game)
+  const meleeExtraRaw = COEF * Math.pow(melee, EXP);
+  const levelBonusRaw = LVL_PP * level;
 
-      // “Worth it” cutoff: solve marginal = thresh  =>  melee* = (scale*coef*exp / thresh)^(1/(1-exp))
-      let worthUpTo = '—';
-      if (coef > 0 && exp > 0 && exp < 1 && thresh > 0){
-        const rhs = (scale * coef * exp) / thresh;
-        const power = 1 / (1 - exp);
-        worthUpTo = Math.pow(rhs, power);
-        if (!Number.isFinite(worthUpTo)) worthUpTo = '—';
-      }
+  const meleeExtra = SCALE * meleeExtraRaw;    // DMG increase by Melee stat (combo p.p.)
+  const levelBonus = SCALE * levelBonusRaw;    // DMG increase by Level (combo p.p.)
 
-      // Outputs
-      const fmt = (x)=> (Number.isFinite(x)? x.toFixed(2)+'%':'—');
-      document.getElementById('outTotal').textContent = fmt(totalCombo);
-      document.getElementById('outHit').textContent   = fmt(perHit);
-      document.getElementById('outExtra').textContent = fmt(scale * extraMelee);
-      document.getElementById('outLvl').textContent   = fmt(scale * levelBonus);
-      document.getElementById('outMarg').textContent  = fmt(marginal);
-      document.getElementById('outWorth').textContent = (Number.isFinite(worthUpTo)? Math.round(worthUpTo) + ' Melee' : '—');
-    }
+  const totalCombo = SCALE * (BASE + meleeExtraRaw + levelBonusRaw); // Full combo %
+  const perHit = totalCombo / 4;
 
-    document.getElementById('calcBtn').addEventListener('click', calc);
-    // Auto-calc on load
-    calc();
-  </script>
+  // Outputs
+  document.getElementById('outTotal').textContent = fmt(totalCombo);
+  document.getElementById('outHit').textContent   = fmt(perHit);
+  document.getElementById('outLvl').textContent   = fmt(levelBonus);
+  document.getElementById('outMelee').textContent = fmt(meleeExtra);
+}
+
+document.getElementById('calcBtn').addEventListener('click', calc);
+calc(); // initial render
+</script>
 </body>
 </html>
