@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Final Stand Remastered — Damage Calculator</title>
 <style>
-  :root{
-    --bg:#0b0d10; --card:#12161c; --muted:#9aa4b2; --text:#e6edf3; --accent:#ffc24a;
-    --line:#222a33;
-  }
+  :root{ --bg:#0b0d10; --card:#12161c; --muted:#9aa4b2; --text:#e6edf3; --accent:#ffc24a; --line:#222a33; }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
   .wrap{max-width:1100px;margin:32px auto;padding:0 16px}
@@ -19,10 +16,9 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 0 0 1px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.25)}
   .muted{color:var(--muted)}
   .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-  .col-6{grid-column:span 6} .col-12{grid-column:span 12}
+  .col-6{grid-column:span 6}
   label{display:block;font-weight:600;margin:8px 0 6px}
-  input{width:100%;background:#0f1318;border:1px solid var(--line);color:var(--text);
-    border-radius:10px;padding:10px 12px;outline:none}
+  input{width:100%;background:#0f1318;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;outline:none}
   input:focus{border-color:#2b86ff}
   .btn{cursor:pointer;background:#1a2330;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
   .btn:hover{border-color:#2b86ff}
@@ -43,13 +39,9 @@
     </header>
 
     <div class="two-col">
-      <!-- MELEE CARD -->
+      <!-- MELEE -->
       <div class="card">
         <h2 style="margin:0 0 6px">Melee Damage (4×M1)</h2>
-        <div class="muted" style="margin-bottom:8px">
-          Uses your tested scaling (includes ×0.95 in-game correction).
-        </div>
-
         <div class="grid">
           <div class="col-6">
             <label>Melee</label>
@@ -60,26 +52,19 @@
             <input id="levelM" type="number" min="0" step="1" value="100">
           </div>
         </div>
-
         <div style="margin-top:12px"><button class="btn" id="calcMelee">Calculate</button></div>
-
         <div class="stats">
           <div class="stat"><div class="label">Full M1 combo damage</div><div class="value accent" id="m_total">–</div></div>
           <div class="stat"><div class="label">Single hit damage</div><div class="value" id="m_hit">–</div></div>
           <div class="stat"><div class="label">DMG increase by Level</div><div class="value" id="m_lvl">–</div></div>
           <div class="stat"><div class="label">DMG increase by Melee stat</div><div class="value" id="m_melee">–</div></div>
         </div>
-
-        <div class="sidenote">* Extra M1’s from <b>Speed</b> don’t do extra damage.</div>
+        <div class="sidenote">* Damage increase values are based on a <b>level-1 fresh slot</b>. Extra M1’s from <b>Speed</b> don’t add damage.</div>
       </div>
 
-      <!-- KI CARD -->
+      <!-- KI -->
       <div class="card">
         <h2 style="margin:0 0 6px">Ki Damage (Basic Blasts)</h2>
-        <div class="muted" style="margin-bottom:8px">
-          Fitted to your Ki tests (includes ×0.95 correction).
-        </div>
-
         <div class="grid">
           <div class="col-6">
             <label>Ki</label>
@@ -90,17 +75,14 @@
             <input id="levelK" type="number" min="0" step="1" value="100">
           </div>
         </div>
-
         <div style="margin-top:12px"><button class="btn" id="calcKi">Calculate</button></div>
-
         <div class="stats">
           <div class="stat"><div class="label">Full basic-blast combo damage</div><div class="value accent" id="k_total">–</div></div>
           <div class="stat"><div class="label">Single blast damage</div><div class="value" id="k_hit">–</div></div>
           <div class="stat"><div class="label">DMG increase by Level</div><div class="value" id="k_lvl">–</div></div>
           <div class="stat"><div class="label">DMG increase by Ki stat</div><div class="value" id="k_ki">–</div></div>
         </div>
-
-        <div class="sidenote">* Extra M1’s from <b>Speed</b> don’t do extra damage.</div>
+        <div class="sidenote">* Damage increase values are based on a <b>level-1 fresh slot</b>.</div>
       </div>
     </div>
 
@@ -108,28 +90,24 @@
   </div>
 
 <script>
-  // ---- Formatting helper
+  // Helpers
   const fmt = x => (Number.isFinite(x)? x.toFixed(2)+'%' : '–');
 
-  // ---- Constants (from your tests)
+  // Global scale (your in-game correction)
   const SCALE = 0.95;
 
-  // Melee model (4×M1)
-  const M_BASE = 14.8;
-  const M_COEF = 0.35;
-  const M_EXP  = 0.71;
-  const M_LVL  = 0.10; // p.p. per level (combo)
+  // Melee model
+  const M_BASE = 14.8, M_COEF = 0.35, M_EXP = 0.71, M_LVL = 0.10; // p.p. per level (combo)
 
   function calcMelee(){
     const melee = Math.max(0, parseFloat(document.getElementById('melee').value || 0));
     const level = Math.max(0, parseFloat(document.getElementById('levelM').value || 0));
+    const extraMeleeRaw = M_COEF * Math.pow(melee, M_EXP);
+    const lvlBonusRaw   = M_LVL  * level;
 
-    const extraMelee_raw = M_COEF * Math.pow(melee, M_EXP);
-    const lvlBonus_raw   = M_LVL  * level;
-
-    const extraMelee = SCALE * extraMelee_raw; // DMG increase by Melee (combo)
-    const lvlBonus   = SCALE * lvlBonus_raw;   // DMG increase by Level (combo)
-    const totalCombo = SCALE * (M_BASE + extraMelee_raw + lvlBonus_raw);
+    const extraMelee = SCALE * extraMeleeRaw;      // DMG increase by Melee (combo)
+    const lvlBonus   = SCALE * lvlBonusRaw;        // DMG increase by Level (combo)
+    const totalCombo = SCALE * (M_BASE + extraMeleeRaw + lvlBonusRaw);
     const perHit     = totalCombo / 4;
 
     document.getElementById('m_total').textContent = fmt(totalCombo);
@@ -138,23 +116,19 @@
     document.getElementById('m_melee').textContent = fmt(extraMelee);
   }
 
-  // Ki model (Basic Blasts, 4-hit combo style aggregation)
+  // Ki model (Basic Blasts) — from your fitted data
   // Ki Combo % ≈ 0.95 × ( 19.9 + 0.0101 × Ki^1.46 + 0.0111 × Level )
-  const K_BASE = 19.9;
-  const K_COEF = 0.0101;
-  const K_EXP  = 1.46;
-  const K_LVL  = 0.0111; // p.p. per level (combo, pre-scale)
+  const K_BASE = 19.9, K_COEF = 0.0101, K_EXP = 1.46, K_LVL = 0.0111;
 
   function calcKi(){
     const ki    = Math.max(0, parseFloat(document.getElementById('ki').value || 0));
     const level = Math.max(0, parseFloat(document.getElementById('levelK').value || 0));
+    const extraKiRaw   = K_COEF * Math.pow(ki, K_EXP);
+    const lvlBonusRaw  = K_LVL  * level;
 
-    const extraKi_raw = K_COEF * Math.pow(ki, K_EXP);
-    const lvlBonus_raw = K_LVL * level;
-
-    const extraKi   = SCALE * extraKi_raw;     // DMG increase by Ki (combo)
-    const lvlBonus  = SCALE * lvlBonus_raw;    // DMG increase by Level (combo)
-    const totalCombo = SCALE * (K_BASE + extraKi_raw + lvlBonus_raw);
+    const extraKi   = SCALE * extraKiRaw;          // DMG increase by Ki (combo)
+    const lvlBonus  = SCALE * lvlBonusRaw;         // DMG increase by Level (combo)
+    const totalCombo = SCALE * (K_BASE + extraKiRaw + lvlBonusRaw);
     const perHit     = totalCombo / 4;
 
     document.getElementById('k_total').textContent = fmt(totalCombo);
@@ -163,11 +137,11 @@
     document.getElementById('k_ki').textContent    = fmt(extraKi);
   }
 
-  // Bind + initial render
+  // Bind after DOM exists (script is at bottom)
   document.getElementById('calcMelee').addEventListener('click', calcMelee);
   document.getElementById('calcKi').addEventListener('click', calcKi);
+  // Initial
   calcMelee(); calcKi();
 </script>
 </body>
 </html>
-
