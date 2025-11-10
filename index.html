@@ -254,31 +254,33 @@
 
 <script>
   // =================== CONSTANTS / MODELS ===================
-  // Core baseline: a level-1 fresh slot with HealthMax=1 has 100.5 HP
   const BASE_HP_H1 = 100 + 0.5*1;   // 100.5
 
-  // "Scale" fix to match in-game results from your testing
+  // "Scale" (your original global fit)
   const SCALE = 0.95;
 
-  // --- Melee (4×M1) damage model: converts stat+level to % vs baseline ---
-  // Combo% ≈ SCALE × ( M_BASE + M_COEF * melee^M_EXP + M_LVL * level )
-  // (Your fitted constants)
+  // --- Melee model (unchanged calculators) ---
   const M_BASE = 14.8;
   const M_COEF = 0.35;
   const M_EXP  = 0.71;
-  const M_LVL  = 0.10;   // p.p. per level, combo
+  const M_LVL  = 0.10;
 
-  // --- Ki (Basic Blasts) damage model: % vs baseline ---
-  // Combo% ≈ SCALE × ( K_BASE + K_COEF * ki^K_EXP + K_LVL * level )
+  // --- Ki model (unchanged calculators) ---
   const K_BASE = 19.9;
   const K_COEF = 0.0101;
   const K_EXP  = 1.46;
-  const K_LVL  = 0.0111; // combo p.p. per level (pre-scale fitted; included in SCALE multiplier)
+  const K_LVL  = 0.0111;
 
-  // Convert % vs baseline to ABSOLUTE HP using 100.5 HP baseline
+  // ===== Simulator-only calibration (new) =====
+  const CAL = {
+    MELEE_LEVEL_FACTOR: 0.50, // halve attacker level inside SIMULATOR
+    KI_LEVEL_FACTOR:    0.50, // same for Ki
+    KI_PCT_SCALE:       0.985 // shave ~1% absolute in typical ranges
+  };
+
   function pctToHP(p){ return (p/100) * BASE_HP_H1; }
 
-  // Melee & Ki calculator helpers (return HP)
+  // calculators (return HP for a full combo)
   function meleeComboHP(level, melee){
     const comboPct = SCALE * (M_BASE + M_COEF*Math.pow(Math.max(0,melee), M_EXP) + M_LVL*Math.max(0,level));
     return pctToHP(comboPct);
@@ -288,14 +290,12 @@
     return pctToHP(comboPct);
   }
 
-  // --- Resistance curves (attack-agnostic after HP scaling) ---
-  // Damage Mult = 1 / (1 + a*(R-1) + b*(R-1)^2)
+  // resist curves
   function multMelee(R){ const x=R-1; return 1/(1 + 0.0015*x + 0.00004*x*x); }
   function multKi(R){    const x=R-1; return 1/(1 + 0.0008*x + 0.00004*x*x); }
 
-  // Baseline raw combo damage from Lv1 attacker (1/1) in HP units (from your measured 17% & 16.5%)
-  const BASE_MELEE_HP = pctToHP(17.0);   // ≈ 17.085 HP
-  const BASE_KI_HP    = pctToHP(16.5);   // ≈ 16.5825 HP
+  const BASE_MELEE_HP = pctToHP(17.0);
+  const BASE_KI_HP    = pctToHP(16.5);
 
   const maxHP = H => 100 + 0.5*Math.max(0, H);
   const fmt = x => Number.isFinite(x) ? (Math.round(x*100)/100).toFixed(2) : '–';
@@ -336,7 +336,6 @@
   document.getElementById('calcKi').addEventListener('click', calcKi);
 
   // =================== INVESTMENT EFFICIENCY ===================
-  // Damage (HP) as a function of stat
   const meleeHPAt = (lvl, m) => meleeComboHP(lvl, m);
   const kiHPAt    = (lvl, k) => kiComboHP(lvl, k);
 
@@ -397,10 +396,10 @@
     const nowHP   = baseHP * nowMult;
     const n10Mult = multFn(currentR+10);
     const n10HP   = baseHP * n10Mult;
-    const dHP     = n10HP - nowHP; // negative (less damage)
+    const dHP     = n10HP - nowHP;
     const mitNow  = (1 - nowMult) * 100;
     const mitN10  = (1 - n10Mult) * 100;
-    const mitGain = mitN10 - mitNow; // positive p.p.
+    const mitGain = mitN10 - mitNow;
     return {baseHP, nowHP, dHP, mitGain};
   }
 
@@ -421,7 +420,7 @@
     const {baseHP, nowHP, dHP, mitGain} = resEfficiency(R, multMelee);
     document.getElementById('effRMbase').textContent = fmt(baseHP);
     document.getElementById('effRMnow').textContent  = fmt(nowHP);
-    document.getElementById('effRM10').textContent   = fmt(dHP); // negative means less damage
+    document.getElementById('effRM10').textContent   = fmt(dHP);
     document.getElementById('effRM10p').textContent  = fmt(mitGain);
     document.getElementById('effRMCut').textContent  = findResCutoff(R, multMelee, cutoff) + " Res";
   }
@@ -438,19 +437,21 @@
   document.getElementById('effRMBtn').addEventListener('click', runEffRM);
   document.getElementById('effRKBtn').addEventListener('click', runEffRK);
 
-  // =================== BATTLE SIMULATOR ===================
-  // Predict % HP loss (attacker -> defender)
+  // =================== BATTLE SIMULATOR (fixed) ===================
   function predictMelee(att, def){
-    const comboHP = meleeComboHP(att.lvl, att.melee);
+    const effLvl = att.lvl * CAL.MELEE_LEVEL_FACTOR;         // level halved
+    const comboHP = meleeComboHP(effLvl, att.melee);
     const mult    = multMelee(def.resM);
     const dmgHP   = comboHP * mult;
     return 100 * dmgHP / maxHP(def.hp);
   }
   function predictKi(att, def){
-    const comboHP = kiComboHP(att.lvl, att.ki);
+    const effLvl = att.lvl * CAL.KI_LEVEL_FACTOR;            // level halved
+    const comboHP = kiComboHP(effLvl, att.ki);
     const mult    = multKi(def.resK);
     const dmgHP   = comboHP * mult;
-    return 100 * dmgHP / maxHP(def.hp);
+    const pct     = 100 * dmgHP / maxHP(def.hp);
+    return pct * CAL.KI_PCT_SCALE;                           // tiny % correction
   }
 
   function readChar(prefix){
