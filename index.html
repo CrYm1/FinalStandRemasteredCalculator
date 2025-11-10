@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Final Stand Remastered — Damage Calculators & Scaling</title>
+<title>Final Stand Remastered — Calculators & Battle Sim</title>
 <style>
   :root{ --bg:#0b0d10; --card:#12161c; --muted:#9aa4b2; --text:#e6edf3; --accent:#ffc24a; --line:#222a33; }
   *{box-sizing:border-box}
@@ -12,6 +12,7 @@
   header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
   h1{font-size:20px;margin:0}
   h2{margin:0 0 8px}
+  h3{margin:0}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media (max-width:900px){ .two-col{grid-template-columns:1fr} }
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 0 0 1px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.25); margin-bottom:16px;}
@@ -33,7 +34,6 @@
   .sidenote{margin-top:10px;color:var(--muted);font-size:12px}
   .mini{font-size:12px;color:var(--muted)}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  canvas{width:100%; height:300px; background:#0f1318; border:1px solid var(--line); border-radius:12px;}
   .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#0f1318}
 </style>
 </head>
@@ -41,14 +41,14 @@
   <div class="wrap">
     <header>
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 17h8M4 13h12M4 9h16" stroke="#ffc24a" stroke-width="2" stroke-linecap="round"/></svg>
-      <h1>Final Stand Remastered — Damage Calculators & Scaling</h1>
+      <h1>Final Stand Remastered — Calculators & Battle Sim</h1>
     </header>
 
-    <!-- CALCULATORS -->
+    <!-- CALCULATORS: show ACTUAL HP damage -->
     <div class="two-col">
       <!-- MELEE -->
       <div class="card">
-        <h2>Melee Damage (4×M1)</h2>
+        <h2>Melee Damage (4×M1) — Actual HP</h2>
         <div class="grid">
           <div class="col-6">
             <label>Melee</label>
@@ -61,17 +61,17 @@
         </div>
         <div class="row" style="margin-top:12px"><button class="btn" id="calcMelee">Calculate</button></div>
         <div class="stats">
-          <div class="stat"><div class="label">Full M1 combo damage</div><div class="value accent" id="m_total">–</div></div>
-          <div class="stat"><div class="label">Single hit damage</div><div class="value" id="m_hit">–</div></div>
-          <div class="stat"><div class="label">DMG increase by Level</div><div class="value" id="m_lvl">–</div></div>
-          <div class="stat"><div class="label">DMG increase by Melee stat</div><div class="value" id="m_melee">–</div></div>
+          <div class="stat"><div class="label">Full M1 combo damage (HP)</div><div class="value accent" id="m_total">–</div></div>
+          <div class="stat"><div class="label">Single hit damage (HP)</div><div class="value" id="m_hit">–</div></div>
+          <div class="stat"><div class="label">Damage from Level (HP)</div><div class="value" id="m_lvl">–</div></div>
+          <div class="stat"><div class="label">Damage from Melee stat (HP)</div><div class="value" id="m_melee">–</div></div>
         </div>
-        <div class="sidenote">* Damage increase values are based on a <b>level-1 fresh slot</b>. Extra M1’s from <b>Speed</b> don’t add damage.</div>
+        <div class="sidenote">* Converted to HP units using fresh-slot baseline HP (100.5). Extra M1’s from <b>Speed</b> don’t add damage.</div>
       </div>
 
       <!-- KI -->
       <div class="card">
-        <h2>Ki Damage (Basic Blasts)</h2>
+        <h2>Ki Damage (Basic Blasts) — Actual HP</h2>
         <div class="grid">
           <div class="col-6">
             <label>Ki</label>
@@ -84,410 +84,405 @@
         </div>
         <div class="row" style="margin-top:12px"><button class="btn" id="calcKi">Calculate</button></div>
         <div class="stats">
-          <div class="stat"><div class="label">Full basic-blast combo damage</div><div class="value accent" id="k_total">–</div></div>
-          <div class="stat"><div class="label">Single blast damage</div><div class="value" id="k_hit">–</div></div>
-          <div class="stat"><div class="label">DMG increase by Level</div><div class="value" id="k_lvl">–</div></div>
-          <div class="stat"><div class="label">DMG increase by Ki stat</div><div class="value" id="k_ki">–</div></div>
+          <div class="stat"><div class="label">Full basic-blast combo (HP)</div><div class="value accent" id="k_total">–</div></div>
+          <div class="stat"><div class="label">Single blast (HP)</div><div class="value" id="k_hit">–</div></div>
+          <div class="stat"><div class="label">Damage from Level (HP)</div><div class="value" id="k_lvl">–</div></div>
+          <div class="stat"><div class="label">Damage from Ki stat (HP)</div><div class="value" id="k_ki">–</div></div>
         </div>
-        <div class="sidenote">* Damage increase values are based on a <b>level-1 fresh slot</b>.</div>
+        <div class="sidenote">* Converted to HP units using fresh-slot baseline HP (100.5).</div>
       </div>
     </div>
 
     <!-- INVESTMENT EFFICIENCY -->
     <div class="card">
       <h2>Investment Efficiency</h2>
-      <div class="mini">Shows how much extra you gain if you add +10 / +20 / +50 points from your current stat.</div>
+      <div class="mini">Shows the <b>actual HP gain</b> from +10 / +20 / +50 points and the cutoff where gains drop below your threshold.</div>
+
       <div class="two-col">
+        <!-- Melee Efficiency -->
         <div>
           <div class="row" style="margin-top:12px">
             <span class="pill">Melee</span>
             <label style="margin:0 0 0 8px">Current Melee</label>
             <input id="effMVal" type="number" min="0" step="1" value="100" style="max-width:140px">
+            <label style="margin:0 0 0 8px">Level</label>
+            <input id="effMLvl" type="number" min="0" step="1" value="100" style="max-width:100px">
+            <label style="margin:0 0 0 8px">Cutoff per +10 (HP)</label>
+            <input id="cutM" type="number" min="0" step="0.1" value="0.5" style="max-width:100px">
             <button class="btn" id="effMBtn">Check</button>
           </div>
           <div class="stats">
-            <div class="stat"><div class="label">+10 → combo gain</div><div class="value" id="effM10">–</div></div>
-            <div class="stat"><div class="label">+20 → combo gain</div><div class="value" id="effM20">–</div></div>
-            <div class="stat"><div class="label">+50 → combo gain</div><div class="value" id="effM50">–</div></div>
-            <div class="stat"><div class="label">“Not worth” cutoff</div><div class="value" id="effMCut">–</div></div>
+            <div class="stat"><div class="label">+10 → combo gain (HP)</div><div class="value" id="effM10">–</div></div>
+            <div class="stat"><div class="label">+20 → combo gain (HP)</div><div class="value" id="effM20">–</div></div>
+            <div class="stat"><div class="label">+50 → combo gain (HP)</div><div class="value" id="effM50">–</div></div>
+            <div class="stat"><div class="label">“Not worth” cutoff (≈ stat)</div><div class="value" id="effMCut">–</div></div>
           </div>
         </div>
+
+        <!-- Ki Efficiency -->
         <div>
-          <div class="row" style="margin-top:12px">
+          <div class="row" style="margin:12px 0 0">
             <span class="pill">Ki</span>
             <label style="margin:0 0 0 8px">Current Ki</label>
             <input id="effKVal" type="number" min="0" step="1" value="150" style="max-width:140px">
+            <label style="margin:0 0 0 8px">Level</label>
+            <input id="effKLvl" type="number" min="0" step="1" value="100" style="max-width:100px">
+            <label style="margin:0 0 0 8px">Cutoff per +10 (HP)</label>
+            <input id="cutK" type="number" min="0" step="0.1" value="0.5" style="max-width:100px">
             <button class="btn" id="effKBtn">Check</button>
           </div>
           <div class="stats">
-            <div class="stat"><div class="label">+10 → combo gain</div><div class="value" id="effK10">–</div></div>
-            <div class="stat"><div class="label">+20 → combo gain</div><div class="value" id="effK20">–</div></div>
-            <div class="stat"><div class="label">+50 → combo gain</div><div class="value" id="effK50">–</div></div>
-            <div class="stat"><div class="label">“Not worth” cutoff</div><div class="value" id="effKCut">–</div></div>
+            <div class="stat"><div class="label">+10 → combo gain (HP)</div><div class="value" id="effK10">–</div></div>
+            <div class="stat"><div class="label">+20 → combo gain (HP)</div><div class="value" id="effK20">–</div></div>
+            <div class="stat"><div class="label">+50 → combo gain (HP)</div><div class="value" id="effK50">–</div></div>
+            <div class="stat"><div class="label">“Not worth” cutoff (≈ stat)</div><div class="value" id="effKCut">–</div></div>
           </div>
         </div>
       </div>
-      <div class="mini" style="margin-top:6px">
-        Cutoff rule (editable in code): Melee <b>+10</b> gain &lt; <b>0.5%</b> combo; Ki <b>+10</b> gain &lt; <b>0.5%</b> combo.
+
+      <hr style="border:none;border-top:1px solid var(--line);margin:14px 0">
+
+      <!-- Resistance Efficiency (attacker fixed = Lv1 freshie 1/1) -->
+      <div>
+        <h3 style="margin:4px 0 8px">Resistance Efficiency (vs Lv1 fresh attacker)</h3>
+        <div class="two-col">
+          <div>
+            <div class="row" style="margin-top:8px">
+              <span class="pill">Melee Resistance</span>
+              <label style="margin:0 0 0 8px">Current Res</label>
+              <input id="effRMe" type="number" min="0" step="1" value="100" style="max-width:120px">
+              <label style="margin:0 0 0 8px">Cutoff per +10 (mitigation p.p.)</label>
+              <input id="cutRM" type="number" min="0" step="0.1" value="0.5" style="max-width:120px">
+              <button class="btn" id="effRMBtn">Check</button>
+            </div>
+            <div class="stats">
+              <div class="stat"><div class="label">Base damage (HP) from Lv1 1/1</div><div class="value" id="effRMbase">–</div></div>
+              <div class="stat"><div class="label">Damage now (HP)</div><div class="value" id="effRMnow">–</div></div>
+              <div class="stat"><div class="label">+10 → damage change (HP)</div><div class="value" id="effRM10">–</div></div>
+              <div class="stat"><div class="label">+10 → mitigation gain (p.p.)</div><div class="value" id="effRM10p">–</div></div>
+              <div class="stat"><div class="label">Cutoff (≈ Res)</div><div class="value" id="effRMCut">–</div></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="row" style="margin-top:8px">
+              <span class="pill">Ki Resistance</span>
+              <label style="margin:0 0 0 8px">Current Res</label>
+              <input id="effRKi" type="number" min="0" step="1" value="100" style="max-width:120px">
+              <label style="margin:0 0 0 8px">Cutoff per +10 (mitigation p.p.)</label>
+              <input id="cutRK" type="number" min="0" step="0.1" value="0.5" style="max-width:120px">
+              <button class="btn" id="effRKBtn">Check</button>
+            </div>
+            <div class="stats">
+              <div class="stat"><div class="label">Base damage (HP) from Lv1 1/1</div><div class="value" id="effRKbase">–</div></div>
+              <div class="stat"><div class="label">Damage now (HP)</div><div class="value" id="effRKnow">–</div></div>
+              <div class="stat"><div class="label">+10 → damage change (HP)</div><div class="value" id="effRK10">–</div></div>
+              <div class="stat"><div class="label">+10 → mitigation gain (p.p.)</div><div class="value" id="effRK10p">–</div></div>
+              <div class="stat"><div class="label">Cutoff (≈ Res)</div><div class="value" id="effRKCut">–</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mini" style="margin-top:6px">Mitigation p.p. = percentage-point increase in mitigation from +10 Resistance, attacker fixed to Lv1 with 1 Melee / 1 Ki.</div>
       </div>
     </div>
 
-    <!-- SCALING BREAKDOWN (CHARTS) -->
+    <!-- BATTLE SIMULATOR -->
     <div class="card">
-      <h2>Scaling Breakdown (Live)</h2>
-      <div class="mini">Hover markers show % combo. The slope shows “gain per +10”.</div>
-      <div class="two-col">
-        <div>
-          <div class="mini" style="margin:6px 0">Melee damage scaling</div>
-          <canvas id="chartMelee"></canvas>
-        </div>
-        <div>
-          <div class="mini" style="margin:6px 0">Ki damage scaling</div>
-          <canvas id="chartKi"></canvas>
-        </div>
-      </div>
+      <h2>Battle Simulator (A vs B)</h2>
+      <div class="mini">Enter both characters. Output shows predicted % HP lost from a full 4×M1 (Melee) and a basic-blast combo (Ki).</div>
+
       <div class="two-col" style="margin-top:12px">
+        <!-- Character A -->
         <div>
-          <div class="mini" style="margin:6px 0">Melee resistance — diminishing returns</div>
-          <canvas id="chartResM"></canvas>
+          <h3 style="margin:0 0 8px">Character A (attacker in A→B)</h3>
+          <div class="grid">
+            <div class="col-6"><label>Level</label><input id="A_lvl" type="number" value="100"></div>
+            <div class="col-6"><label>Health Max</label><input id="A_hp" type="number" value="0"></div>
+            <div class="col-6"><label>Melee</label><input id="A_melee" type="number" value="100"></div>
+            <div class="col-6"><label>Ki</label><input id="A_ki" type="number" value="150"></div>
+            <div class="col-6"><label>Melee Res</label><input id="A_resM" type="number" value="0"></div>
+            <div class="col-6"><label>Ki Res</label><input id="A_resK" type="number" value="0"></div>
+          </div>
         </div>
+
+        <!-- Character B -->
         <div>
-          <div class="mini" style="margin:6px 0">Ki resistance — diminishing returns</div>
-          <canvas id="chartResK"></canvas>
+          <h3 style="margin:0 0 8px">Character B (attacker in B→A)</h3>
+          <div class="grid">
+            <div class="col-6"><label>Level</label><input id="B_lvl" type="number" value="100"></div>
+            <div class="col-6"><label>Health Max</label><input id="B_hp" type="number" value="0"></div>
+            <div class="col-6"><label>Melee</label><input id="B_melee" type="number" value="100"></div>
+            <div class="col-6"><label>Ki</label><input id="B_ki" type="number" value="150"></div>
+            <div class="col-6"><label>Melee Res</label><input id="B_resM" type="number" value="0"></div>
+            <div class="col-6"><label>Ki Res</label><input id="B_resK" type="number" value="0"></div>
+          </div>
         </div>
       </div>
-    </div>
-<!-- BATTLE SIMULATOR -->
-<div class="card">
-  <h2>Battle Simulator (A vs B)</h2>
-  <div class="mini">Enter both characters. Output shows predicted % HP lost from a full 4×M1 combo (Melee) and a basic-blast combo (Ki).</div>
 
-  <div class="two-col" style="margin-top:12px">
-    <!-- Character A -->
-    <div>
-      <h3 style="margin:0 0 8px">Character A (attacker in A→B)</h3>
-      <div class="grid">
-        <div class="col-6"><label>Level</label><input id="A_lvl" type="number" value="100"></div>
-        <div class="col-6"><label>Health Max</label><input id="A_hp" type="number" value="0"></div>
-        <div class="col-6"><label>Melee</label><input id="A_melee" type="number" value="100"></div>
-        <div class="col-6"><label>Ki</label><input id="A_ki" type="number" value="150"></div>
-        <div class="col-6"><label>Melee Res</label><input id="A_resM" type="number" value="0"></div>
-        <div class="col-6"><label>Ki Res</label><input id="A_resK" type="number" value="0"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="simRun">Simulate A ↔ B</button>
       </div>
-    </div>
 
-    <!-- Character B -->
-    <div>
-      <h3 style="margin:0 0 8px">Character B (attacker in B→A)</h3>
-      <div class="grid">
-        <div class="col-6"><label>Level</label><input id="B_lvl" type="number" value="100"></div>
-        <div class="col-6"><label>Health Max</label><input id="B_hp" type="number" value="0"></div>
-        <div class="col-6"><label>Melee</label><input id="B_melee" type="number" value="100"></div>
-        <div class="col-6"><label>Ki</label><input id="B_ki" type="number" value="150"></div>
-        <div class="col-6"><label>Melee Res</label><input id="B_resM" type="number" value="0"></div>
-        <div class="col-6"><label>Ki Res</label><input id="B_resK" type="number" value="0"></div>
+      <div class="two-col" style="margin-top:12px">
+        <div class="stats">
+          <div class="stat">
+            <div class="label">A → B (Melee, 4×M1)</div>
+            <div class="value accent" id="AB_melee">–</div>
+          </div>
+          <div class="stat">
+            <div class="label">A → B (Ki, blasts)</div>
+            <div class="value" id="AB_ki">–</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="label">B → A (Melee, 4×M1)</div>
+            <div class="value accent" id="BA_melee">–</div>
+          </div>
+          <div class="stat">
+            <div class="label">B → A (Ki, blasts)</div>
+            <div class="value" id="BA_ki">–</div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="row" style="margin-top:12px">
-    <button class="btn" id="simRun">Simulate A ↔ B</button>
-    <label class="mini" style="margin-left:12px">
-      <input type="checkbox" id="useLevelPen" checked> Apply tiny melee level-difference factor (~0.1% per level)
-    </label>
-  </div>
-
-  <div class="two-col" style="margin-top:12px">
-    <div class="stats">
-      <div class="stat"><div class="label">A → B (Melee, 4×M1)</div><div class="value accent" id="AB_melee">–</div></div>
-      <div class="stat"><div class="label">A → B (Ki, blasts)</div><div class="value" id="AB_ki">–</div></div>
+      <div class="sidenote">* Max HP = 100 + 0.5×HealthMax. Resistances use tested curves; level difference factor is omitted as its effect was negligible.</div>
     </div>
-    <div class="stats">
-      <div class="stat"><div class="label">B → A (Melee, 4×M1)</div><div class="value accent" id="BA_melee">–</div></div>
-      <div class="stat"><div class="label">B → A (Ki, blasts)</div><div class="value" id="BA_ki">–</div></div>
-    </div>
-  </div>
-
-  <div class="sidenote">* Baseline target = level-1 fresh slot (HealthMax=1 → 100.5 HP). Max HP = 100 + 0.5×HealthMax. Extra M1’s from <b>Speed</b> don’t add damage.</div>
-</div>
 
     <div class="muted" style="margin-top:12px">No tracking. All math runs locally in your browser.</div>
   </div>
 
 <script>
-  // ---------- CONSTANTS (from your fits) ----------
+  // =================== CONSTANTS / MODELS ===================
+  // Core baseline: a level-1 fresh slot with HealthMax=1 has 100.5 HP
+  const BASE_HP_H1 = 100 + 0.5*1;   // 100.5
+
+  // "Scale" fix to match in-game results from your testing
   const SCALE = 0.95;
 
-  // Melee model
-  const M_BASE = 14.8, M_COEF = 0.35, M_EXP = 0.71, M_LVL = 0.10; // p.p. per level (combo)
+  // --- Melee (4×M1) damage model: converts stat+level to % vs baseline ---
+  // Combo% ≈ SCALE × ( M_BASE + M_COEF * melee^M_EXP + M_LVL * level )
+  // (Your fitted constants)
+  const M_BASE = 14.8;
+  const M_COEF = 0.35;
+  const M_EXP  = 0.71;
+  const M_LVL  = 0.10;   // p.p. per level, combo
 
-  // Ki model (Basic Blasts)
-  const K_BASE = 19.9, K_COEF = 0.0101, K_EXP = 1.46, K_LVL = 0.0111; // combo p.p./level (pre-scale)
+  // --- Ki (Basic Blasts) damage model: % vs baseline ---
+  // Combo% ≈ SCALE × ( K_BASE + K_COEF * ki^K_EXP + K_LVL * level )
+  const K_BASE = 19.9;
+  const K_COEF = 0.0101;
+  const K_EXP  = 1.46;
+  const K_LVL  = 0.0111; // combo p.p. per level (pre-scale fitted; included in SCALE multiplier)
 
-  // Resistance curves (attack-agnostic after HP scaling)
+  // Convert % vs baseline to ABSOLUTE HP using 100.5 HP baseline
+  function pctToHP(p){ return (p/100) * BASE_HP_H1; }
+
+  // Melee & Ki calculator helpers (return HP)
+  function meleeComboHP(level, melee){
+    const comboPct = SCALE * (M_BASE + M_COEF*Math.pow(Math.max(0,melee), M_EXP) + M_LVL*Math.max(0,level));
+    return pctToHP(comboPct);
+  }
+  function kiComboHP(level, ki){
+    const comboPct = SCALE * (K_BASE + K_COEF*Math.pow(Math.max(0,ki), K_EXP) + K_LVL*Math.max(0,level));
+    return pctToHP(comboPct);
+  }
+
+  // --- Resistance curves (attack-agnostic after HP scaling) ---
+  // Damage Mult = 1 / (1 + a*(R-1) + b*(R-1)^2)
   function multMelee(R){ const x=R-1; return 1/(1 + 0.0015*x + 0.00004*x*x); }
   function multKi(R){    const x=R-1; return 1/(1 + 0.0008*x + 0.00004*x*x); }
 
-  // ---------- HELPERS ----------
-  const fmt = x => (Number.isFinite(x)? x.toFixed(2)+'%' : '–');
+  // Baseline raw combo damage from Lv1 attacker (1/1) in HP units (from your measured 17% & 16.5%)
+  const BASE_MELEE_HP = pctToHP(17.0);   // ≈ 17.085 HP
+  const BASE_KI_HP    = pctToHP(16.5);   // ≈ 16.5825 HP
 
-  // Melee calc
+  const maxHP = H => 100 + 0.5*Math.max(0, H);
+  const fmt = x => Number.isFinite(x) ? (Math.round(x*100)/100).toFixed(2) : '–';
+  const fmtPct = x => Number.isFinite(x) ? (Math.round(x*100)/100).toFixed(2)+'%' : '–';
+
+  // =================== CALCULATORS (Actual HP) ===================
   function calcMelee(){
-    const melee = Math.max(0, parseFloat(document.getElementById('melee').value||0));
-    const level = Math.max(0, parseFloat(document.getElementById('levelM').value||0));
-    const extraRaw = M_COEF * Math.pow(melee, M_EXP);
-    const lvlRaw   = M_LVL * level;
+    const melee = +document.getElementById('melee').value || 0;
+    const level = +document.getElementById('levelM').value || 0;
 
-    const extra = SCALE * extraRaw;
-    const lvl   = SCALE * lvlRaw;
-    const total = SCALE * (M_BASE + extraRaw + lvlRaw);
-    const perHit = total / 4;
+    const comboHP = meleeComboHP(level, melee);
+    const perHit  = comboHP / 4;
+    const fromLevel = pctToHP(SCALE * (M_LVL*Math.max(0,level)));
+    const fromMelee = pctToHP(SCALE * (M_COEF*Math.pow(Math.max(0,melee), M_EXP)));
 
-    document.getElementById('m_total').textContent = fmt(total);
+    document.getElementById('m_total').textContent = fmt(comboHP);
     document.getElementById('m_hit').textContent   = fmt(perHit);
-    document.getElementById('m_lvl').textContent   = fmt(lvl);
-    document.getElementById('m_melee').textContent = fmt(extra);
+    document.getElementById('m_lvl').textContent   = fmt(fromLevel);
+    document.getElementById('m_melee').textContent = fmt(fromMelee);
   }
 
-  // Ki calc
   function calcKi(){
-    const ki    = Math.max(0, parseFloat(document.getElementById('ki').value||0));
-    const level = Math.max(0, parseFloat(document.getElementById('levelK').value||0));
-    const extraRaw = K_COEF * Math.pow(ki, K_EXP);
-    const lvlRaw   = K_LVL * level;
+    const ki    = +document.getElementById('ki').value || 0;
+    const level = +document.getElementById('levelK').value || 0;
 
-    const extra = SCALE * extraRaw;
-    const lvl   = SCALE * lvlRaw;
-    const total = SCALE * (K_BASE + extraRaw + lvlRaw);
-    const perHit = total / 4;
+    const comboHP = kiComboHP(level, ki);
+    const perHit  = comboHP / 4;
+    const fromLevel = pctToHP(SCALE * (K_LVL*Math.max(0,level)));
+    const fromKi    = pctToHP(SCALE * (K_COEF*Math.pow(Math.max(0,ki), K_EXP)));
 
-    document.getElementById('k_total').textContent = fmt(total);
+    document.getElementById('k_total').textContent = fmt(comboHP);
     document.getElementById('k_hit').textContent   = fmt(perHit);
-    document.getElementById('k_lvl').textContent   = fmt(lvl);
-    document.getElementById('k_ki').textContent    = fmt(extra);
-  }
-
-  // ---------- Investment Efficiency ----------
-  const MELEE_CUTOFF_PER10 = 0.5; // % combo per +10 (change if you want)
-  const KI_CUTOFF_PER10    = 0.5;
-
-  function meleeComboAt(m){ return SCALE * (M_BASE + M_COEF*Math.pow(Math.max(m,0), M_EXP)); }
-  function kiComboAt(k){   return SCALE * (K_BASE + K_COEF*Math.pow(Math.max(k,0), K_EXP)); }
-
-  function effBlock(statVal, fn){
-    const base = fn(statVal);
-    const d10  = fn(statVal+10) - base;
-    const d20  = fn(statVal+20) - base;
-    const d50  = fn(statVal+50) - base;
-    return {d10, d20, d50};
-  }
-  function findCutoff(start, fn, thresholdPer10){
-    // find smallest stat where +10 gain < threshold
-    let s = Math.max(0, start);
-    for(let i=0;i<1000;i++){
-      const gain = fn(s+10) - fn(s);
-      if (gain < thresholdPer10) return Math.round(s);
-      s += 5;
-      if (s>5000) break;
-    }
-    return "—";
-  }
-
-  function runEffM(){
-    const v = parseFloat(document.getElementById('effMVal').value||0);
-    const {d10,d20,d50} = effBlock(v, meleeComboAt);
-    document.getElementById('effM10').textContent = fmt(d10);
-    document.getElementById('effM20').textContent = fmt(d20);
-    document.getElementById('effM50').textContent = fmt(d50);
-    document.getElementById('effMCut').textContent = findCutoff(v, meleeComboAt, MELEE_CUTOFF_PER10) + " Melee";
-  }
-  function runEffK(){
-    const v = parseFloat(document.getElementById('effKVal').value||0);
-    const {d10,d20,d50} = effBlock(v, kiComboAt);
-    document.getElementById('effK10').textContent = fmt(d10);
-    document.getElementById('effK20').textContent = fmt(d20);
-    document.getElementById('effK50').textContent = fmt(d50);
-    document.getElementById('effKCut').textContent = findCutoff(v, kiComboAt, KI_CUTOFF_PER10) + " Ki";
+    document.getElementById('k_lvl').textContent   = fmt(fromLevel);
+    document.getElementById('k_ki').textContent    = fmt(fromKi);
   }
 
   document.getElementById('calcMelee').addEventListener('click', calcMelee);
   document.getElementById('calcKi').addEventListener('click', calcKi);
+
+  // =================== INVESTMENT EFFICIENCY ===================
+  // Damage (HP) as a function of stat
+  const meleeHPAt = (lvl, m) => meleeComboHP(lvl, m);
+  const kiHPAt    = (lvl, k) => kiComboHP(lvl, k);
+
+  function effBlock(stat, lvl, fn){
+    const b  = fn(lvl, stat);
+    const d10= fn(lvl, stat+10) - b;
+    const d20= fn(lvl, stat+20) - b;
+    const d50= fn(lvl, stat+50) - b;
+    return {d10, d20, d50};
+  }
+
+  function findCutoff(statStart, lvl, fn, thresholdPer10){
+    let s = Math.max(0, statStart);
+    for(let i=0;i<2000;i++){
+      const gain10 = fn(lvl, s+10) - fn(lvl, s);
+      if (gain10 < thresholdPer10) return Math.round(s);
+      s += 5; if (s>5000) break;
+    }
+    return "—";
+  }
+
+  // Melee
+  function runEffM(){
+    const val = +document.getElementById('effMVal').value || 0;
+    const lvl = +document.getElementById('effMLvl').value || 0;
+    const cut = +document.getElementById('cutM').value || 0.5;
+
+    const {d10,d20,d50} = effBlock(val, lvl, meleeHPAt);
+    const cutStat = findCutoff(val, lvl, meleeHPAt, cut);
+
+    document.getElementById('effM10').textContent = fmt(d10);
+    document.getElementById('effM20').textContent = fmt(d20);
+    document.getElementById('effM50').textContent = fmt(d50);
+    document.getElementById('effMCut').textContent = (typeof cutStat==='number' ? cutStat : cutStat) + " Melee";
+  }
   document.getElementById('effMBtn').addEventListener('click', runEffM);
+
+  // Ki
+  function runEffK(){
+    const val = +document.getElementById('effKVal').value || 0;
+    const lvl = +document.getElementById('effKLvl').value || 0;
+    const cut = +document.getElementById('cutK').value || 0.5;
+
+    const {d10,d20,d50} = effBlock(val, lvl, kiHPAt);
+    const cutStat = findCutoff(val, lvl, kiHPAt, cut);
+
+    document.getElementById('effK10').textContent = fmt(d10);
+    document.getElementById('effK20').textContent = fmt(d20);
+    document.getElementById('effK50').textContent = fmt(d50);
+    document.getElementById('effKCut').textContent = (typeof cutStat==='number' ? cutStat : cutStat) + " Ki";
+  }
   document.getElementById('effKBtn').addEventListener('click', runEffK);
 
-  // ---------- Tiny chart util (vanilla canvas) ----------
-  function lineChart(canvasId, xs, ys, opts={}){
-    const c = document.getElementById(canvasId);
-    const ctx = c.getContext("2d");
-    const W = c.width = c.clientWidth * devicePixelRatio;
-    const H = c.height = c.clientHeight * devicePixelRatio;
+  // Resistance efficiency vs Lv1 1/1 attacker
+  function resEfficiency(currentR, multFn){
+    const baseHP = multFn === multMelee ? BASE_MELEE_HP : BASE_KI_HP;
+    const nowMult = multFn(currentR);
+    const nowHP   = baseHP * nowMult;
+    const n10Mult = multFn(currentR+10);
+    const n10HP   = baseHP * n10Mult;
+    const dHP     = n10HP - nowHP; // negative (less damage)
+    const mitNow  = (1 - nowMult) * 100;
+    const mitN10  = (1 - n10Mult) * 100;
+    const mitGain = mitN10 - mitNow; // positive p.p.
+    return {baseHP, nowHP, dHP, mitGain};
+  }
 
-    const pad = 48 * devicePixelRatio;
-    const xmin = Math.min(...xs), xmax = Math.max(...xs);
-    const ymin = Math.min(...ys), ymax = Math.max(...ys);
-    const x0 = pad, y0 = H - pad, x1 = W - pad, y1 = pad;
-    function X(v){ return x0 + (v - xmin) * (x1 - x0) / (xmax - xmin || 1); }
-    function Y(v){ return y0 - (v - ymin) * (y0 - y1) / (ymax - ymin || 1); }
-
-    // bg
-    ctx.fillStyle = "#0f1318"; ctx.fillRect(0,0,W,H);
-    // grid
-    ctx.strokeStyle = "#233242"; ctx.lineWidth = 1;
-    ctx.beginPath();
-    for(let i=0;i<=5;i++){
-      const yy = y0 - i*(y0-y1)/5;
-      ctx.moveTo(x0,yy); ctx.lineTo(x1,yy);
+  function findResCutoff(startR, multFn, thresholdPP){
+    let r = Math.max(0, startR);
+    for(let i=0;i<2000;i++){
+      const mNow = (1 - multFn(r)) * 100;
+      const mNext= (1 - multFn(r+10)) * 100;
+      if ((mNext - mNow) < thresholdPP) return Math.round(r);
+      r += 5; if (r>5000) break;
     }
-    for(let i=0;i<=5;i++){
-      const xx = x0 + i*(x1-x0)/5;
-      ctx.moveTo(xx,y0); ctx.lineTo(xx,y1);
-    }
-    ctx.stroke();
-
-    // axes
-    ctx.strokeStyle = "#435366"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y0); ctx.moveTo(x0,y0); ctx.lineTo(x0,y1); ctx.stroke();
-
-    // line
-    ctx.strokeStyle = "#ffc24a"; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(X(xs[0]),Y(ys[0]));
-    for(let i=1;i<xs.length;i++){ ctx.lineTo(X(xs[i]),Y(ys[i])); }
-    ctx.stroke();
-
-    // markers
-    ctx.fillStyle = "#ffe2a1";
-    for(let i=0;i<xs.length;i++){
-      const xx=X(xs[i]), yy=Y(ys[i]);
-      ctx.beginPath(); ctx.arc(xx,yy,3.5*devicePixelRatio,0,Math.PI*2); ctx.fill();
-    }
-
-    // labels (simple)
-    ctx.fillStyle = "#9aa4b2"; ctx.font = `${12*devicePixelRatio}px system-ui,Segoe UI`;
-    ctx.fillText(opts.xlabel || "", x0, H-10*devicePixelRatio);
-    ctx.save(); ctx.translate(10*devicePixelRatio, H/2); ctx.rotate(-Math.PI/2);
-    ctx.fillText(opts.ylabel || "", 0,0); ctx.restore();
+    return "—";
   }
 
-  // Build data for charts
-  function buildMeleeSeries(){
-    const xs = [], ys = [];
-    for(let m=0;m<=400;m+=10){ xs.push(m); ys.push(meleeComboAt(m)); }
-    return {xs, ys};
+  function runEffRM(){
+    const R = +document.getElementById('effRMe').value || 0;
+    const cutoff = +document.getElementById('cutRM').value || 0.5;
+    const {baseHP, nowHP, dHP, mitGain} = resEfficiency(R, multMelee);
+    document.getElementById('effRMbase').textContent = fmt(baseHP);
+    document.getElementById('effRMnow').textContent  = fmt(nowHP);
+    document.getElementById('effRM10').textContent   = fmt(dHP); // negative means less damage
+    document.getElementById('effRM10p').textContent  = fmt(mitGain);
+    document.getElementById('effRMCut').textContent  = findResCutoff(R, multMelee, cutoff) + " Res";
   }
-  function buildKiSeries(){
-    const xs = [], ys = [];
-    for(let k=0;k<=400;k+=10){ xs.push(k); ys.push(kiComboAt(k)); }
-    return {xs, ys};
+  function runEffRK(){
+    const R = +document.getElementById('effRKi').value || 0;
+    const cutoff = +document.getElementById('cutRK').value || 0.5;
+    const {baseHP, nowHP, dHP, mitGain} = resEfficiency(R, multKi);
+    document.getElementById('effRKbase').textContent = fmt(baseHP);
+    document.getElementById('effRKnow').textContent  = fmt(nowHP);
+    document.getElementById('effRK10').textContent   = fmt(dHP);
+    document.getElementById('effRK10p').textContent  = fmt(mitGain);
+    document.getElementById('effRKCut').textContent  = findResCutoff(R, multKi, cutoff) + " Res";
   }
-  function buildResSeries(multFn){
-    const xs = [], ys = [], gain = [];
-    for(let r=0;r<=200;r+=10){
-      xs.push(r);
-      const mult = multFn(r);
-      ys.push( (1 - mult)*100 ); // mitigation %
-      if (r<=190){
-        const next = (1 - multFn(r+10))*100;
-        gain.push(next - (1 - mult)*100);
-      }
-    }
-    return {xs, ys, gain};
+  document.getElementById('effRMBtn').addEventListener('click', runEffRM);
+  document.getElementById('effRKBtn').addEventListener('click', runEffRK);
+
+  // =================== BATTLE SIMULATOR ===================
+  // Predict % HP loss (attacker -> defender)
+  function predictMelee(att, def){
+    const comboHP = meleeComboHP(att.lvl, att.melee);
+    const mult    = multMelee(def.resM);
+    const dmgHP   = comboHP * mult;
+    return 100 * dmgHP / maxHP(def.hp);
+  }
+  function predictKi(att, def){
+    const comboHP = kiComboHP(att.lvl, att.ki);
+    const mult    = multKi(def.resK);
+    const dmgHP   = comboHP * mult;
+    return 100 * dmgHP / maxHP(def.hp);
   }
 
-  function drawAllCharts(){
-    const m = buildMeleeSeries();
-    lineChart("chartMelee", m.xs, m.ys, {xlabel:"Melee stat", ylabel:"Full combo %"});
-    const k = buildKiSeries();
-    lineChart("chartKi", k.xs, k.ys, {xlabel:"Ki stat", ylabel:"Full combo %"});
-    const rm = buildResSeries(multMelee);
-    lineChart("chartResM", rm.xs, rm.ys, {xlabel:"Melee Resistance", ylabel:"Mitigation %"});
-    const rk = buildResSeries(multKi);
-    lineChart("chartResK", rk.xs, rk.ys, {xlabel:"Ki Resistance", ylabel:"Mitigation %"});
+  function readChar(prefix){
+    return {
+      lvl:  +document.getElementById(prefix+'_lvl').value || 0,
+      hp:   +document.getElementById(prefix+'_hp').value || 0,
+      melee:+document.getElementById(prefix+'_melee').value || 0,
+      ki:   +document.getElementById(prefix+'_ki').value || 0,
+      resM: +document.getElementById(prefix+'_resM').value || 0,
+      resK: +document.getElementById(prefix+'_resK').value || 0,
+    };
   }
+  function runSim(){
+    const A = readChar('A');
+    const B = readChar('B');
 
-  // init
+    const ABm = predictMelee(A,B);
+    const ABk = predictKi(A,B);
+    const BAm = predictMelee(B,A);
+    const BAk = predictKi(B,A);
+
+    document.getElementById('AB_melee').textContent = fmtPct(ABm);
+    document.getElementById('AB_ki').textContent    = fmtPct(ABk);
+    document.getElementById('BA_melee').textContent = fmtPct(BAm);
+    document.getElementById('BA_ki').textContent    = fmtPct(BAk);
+  }
+  document.getElementById('simRun').addEventListener('click', runSim);
+
+  // =================== INIT ===================
   calcMelee(); calcKi();
   runEffM(); runEffK();
-  drawAllCharts();
-
-  // Resize redraw
-  window.addEventListener('resize', () => { drawAllCharts(); }, {passive:true});
-<script>
-// ---- ensure these exist already from your calculators ----
-// const SCALE, M_BASE, M_COEF, M_EXP, M_LVL
-// const K_BASE, K_COEF, K_EXP, K_LVL
-// function multMelee(R){...} function multKi(R){...}
-
-// ---------- HP helpers ----------
-const BASE_HP_H1 = 100 + 0.5*1;       // 100.5 HP at HealthMax=1 (fresh slot)
-const maxHP = H => 100 + 0.5*Math.max(0, H);
-
-// ---------- Attacker combo vs baseline ----------
-function meleeComboPct(attLvl, melee){
-  const extraRaw = M_COEF * Math.pow(Math.max(0, melee), M_EXP);
-  const lvlRaw   = M_LVL  * Math.max(0, attLvl);
-  return SCALE * (M_BASE + extraRaw + lvlRaw);   // % of baseline HP
-}
-function kiComboPct(attLvl, ki){
-  const extraRaw = K_COEF * Math.pow(Math.max(0, ki), K_EXP);
-  const lvlRaw   = K_LVL  * Math.max(0, attLvl);
-  return SCALE * (K_BASE + extraRaw + lvlRaw);   // % of baseline HP
-}
-
-// ---------- tiny melee level-diff factor (optional) ----------
-function multMeleeWithLevel(R, dL, enabled){
-  const base = multMelee(R);
-  const fac  = enabled ? (1 + 0.001 * dL) : 1.0; // ≈ +0.1% per level (small)
-  return Math.max(0, base * fac);
-}
-
-// ---------- Predict % HP lost (attacker -> defender) ----------
-function predictMelee(att, def, useLevelPen){
-  const comboPct = meleeComboPct(att.lvl, att.melee);
-  const comboHP  = (comboPct/100) * BASE_HP_H1;
-  const dL = att.lvl - def.lvl;
-  const mult = multMeleeWithLevel(def.resM, dL, useLevelPen);
-  const dmgHP = comboHP * mult;
-  return 100 * dmgHP / maxHP(def.hp);
-}
-function predictKi(att, def){
-  const comboPct = kiComboPct(att.lvl, att.ki);
-  const comboHP  = (comboPct/100) * BASE_HP_H1;
-  const mult = multKi(def.resK);
-  const dmgHP = comboHP * mult;
-  return 100 * dmgHP / maxHP(def.hp);
-}
-
-// ---------- UI wiring ----------
-function readChar(prefix){
-  return {
-    lvl:  parseFloat(document.getElementById(prefix+'_lvl').value||0),
-    hp:   parseFloat(document.getElementById(prefix+'_hp').value||0),
-    melee:parseFloat(document.getElementById(prefix+'_melee').value||0),
-    ki:   parseFloat(document.getElementById(prefix+'_ki').value||0),
-    resM: parseFloat(document.getElementById(prefix+'_resM').value||0),
-    resK: parseFloat(document.getElementById(prefix+'_resK').value||0),
-  };
-}
-const fmtPct = x => (Number.isFinite(x)? x.toFixed(2)+'%' : '–');
-
-function runSim(){
-  const A = readChar('A');
-  const B = readChar('B');
-  const usePen = document.getElementById('useLevelPen').checked;
-
-  const ABm = predictMelee(A, B, usePen);
-  const ABk = predictKi(A, B);
-  const BAm = predictMelee(B, A, usePen);
-  const BAk = predictKi(B, A);
-
-  document.getElementById('AB_melee').textContent = fmtPct(ABm);
-  document.getElementById('AB_ki').textContent    = fmtPct(ABk);
-  document.getElementById('BA_melee').textContent = fmtPct(BAm);
-  document.getElementById('BA_ki').textContent    = fmtPct(BAk);
-}
-document.getElementById('simRun').addEventListener('click', runSim);
-</script>
-
+  runEffRM(); runEffRK();
 </script>
 </body>
 </html>
