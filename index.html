@@ -39,19 +39,21 @@
 </head>
 <body>
   <div class="wrap">
-    <>
+    <header>
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 17h8M4 13h12M4 9h16" stroke="#ffc24a" stroke-width="2" stroke-linecap="round"/></svg>
       <h1>Final Stand Remastered — Calculators & Battle Sim</h1>
     </header>
 <!-- SIDE INFO (edit freely any time) -->
 <div class="card" id="side-info">
-  <h2 style="margin-bottom:6px;">📘 Notes & Info</h2>
+  <h2 style="margin-bottom:6px;">📘 Info</h2>
   <ul id="info-list" style="margin:0; padding-left:18px; color:#b0bac5; font-size:13px; line-height:1.5;">
     <li>Acrosian's Ki blast buff isn’t included.</li>
     <li>SSJ2 (not mastered) ≈ +15% M1 damage from basic scaling.</li>
     <li>SSJ3 (not mastered) ≈ +27% M1 damage from basic scaling.</li>
     <li>You can use capsules in the Battle Simulator — remove any that add % or no stats.</li>
     <li>HP Max scaling: +0.5 HP per stat point.</li>
+    <li>Extra M1's from speed dont do more DMG than the basic 4 M1's.</li>
+    <li>For any questions/suggestions, DM CrYm0.</li>
   </ul>
 </div>
 
@@ -59,7 +61,7 @@
     <div class="two-col">
       <!-- MELEE -->
       <div class="card">
-        <h2>Melee Damage (4×M1) — Actual HP</h2>
+        <h2>Melee Damage (4×M1) — Actual HP DMG</h2>
         <div class="grid">
           <div class="col-6">
             <label>Melee</label>
@@ -82,7 +84,7 @@
 
       <!-- KI -->
       <div class="card">
-        <h2>Ki Damage (Basic Blasts) — Actual HP</h2>
+        <h2>Ki Damage (Basic Blasts) — Actual HP DMG</h2>
         <div class="grid">
           <div class="col-6">
             <label>Ki</label>
@@ -155,7 +157,7 @@
 
       <!-- Resistance Efficiency (attacker fixed = Lv1 freshie 1/1) -->
       <div>
-        <h3 style="margin:4px 0 8px">Resistance Efficiency (vs Lv1 fresh attacker)</h3>
+        <h3 style="margin:4px 0 8px">Resistance Efficiency (vs LvL 1 freshie attacker)</h3>
         <div class="two-col">
           <div>
             <div class="row" style="margin-top:8px">
@@ -257,7 +259,7 @@
         </div>
       </div>
 
-      <div class="sidenote">* Max HP = 100 + 0.5×HealthMax. Resistances use tested curves; level difference factor is omitted as its effect was negligible.</div>
+      <div class="sidenote">* Max HP = 100 + 0.5×HealthMax. Resistances use tested curves;</div>
     </div>
 
     <div class="muted" style="margin-top:12px">No tracking. All math runs locally in your browser.</div>
