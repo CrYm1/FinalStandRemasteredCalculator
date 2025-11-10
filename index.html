@@ -157,6 +157,59 @@
         </div>
       </div>
     </div>
+<!-- BATTLE SIMULATOR -->
+<div class="card">
+  <h2>Battle Simulator (A vs B)</h2>
+  <div class="mini">Enter both characters. Output shows predicted % HP lost from a full 4×M1 combo (Melee) and a basic-blast combo (Ki).</div>
+
+  <div class="two-col" style="margin-top:12px">
+    <!-- Character A -->
+    <div>
+      <h3 style="margin:0 0 8px">Character A (attacker in A→B)</h3>
+      <div class="grid">
+        <div class="col-6"><label>Level</label><input id="A_lvl" type="number" value="100"></div>
+        <div class="col-6"><label>Health Max</label><input id="A_hp" type="number" value="0"></div>
+        <div class="col-6"><label>Melee</label><input id="A_melee" type="number" value="100"></div>
+        <div class="col-6"><label>Ki</label><input id="A_ki" type="number" value="150"></div>
+        <div class="col-6"><label>Melee Res</label><input id="A_resM" type="number" value="0"></div>
+        <div class="col-6"><label>Ki Res</label><input id="A_resK" type="number" value="0"></div>
+      </div>
+    </div>
+
+    <!-- Character B -->
+    <div>
+      <h3 style="margin:0 0 8px">Character B (attacker in B→A)</h3>
+      <div class="grid">
+        <div class="col-6"><label>Level</label><input id="B_lvl" type="number" value="100"></div>
+        <div class="col-6"><label>Health Max</label><input id="B_hp" type="number" value="0"></div>
+        <div class="col-6"><label>Melee</label><input id="B_melee" type="number" value="100"></div>
+        <div class="col-6"><label>Ki</label><input id="B_ki" type="number" value="150"></div>
+        <div class="col-6"><label>Melee Res</label><input id="B_resM" type="number" value="0"></div>
+        <div class="col-6"><label>Ki Res</label><input id="B_resK" type="number" value="0"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="btn" id="simRun">Simulate A ↔ B</button>
+    <label class="mini" style="margin-left:12px">
+      <input type="checkbox" id="useLevelPen" checked> Apply tiny melee level-difference factor (~0.1% per level)
+    </label>
+  </div>
+
+  <div class="two-col" style="margin-top:12px">
+    <div class="stats">
+      <div class="stat"><div class="label">A → B (Melee, 4×M1)</div><div class="value accent" id="AB_melee">–</div></div>
+      <div class="stat"><div class="label">A → B (Ki, blasts)</div><div class="value" id="AB_ki">–</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="label">B → A (Melee, 4×M1)</div><div class="value accent" id="BA_melee">–</div></div>
+      <div class="stat"><div class="label">B → A (Ki, blasts)</div><div class="value" id="BA_ki">–</div></div>
+    </div>
+  </div>
+
+  <div class="sidenote">* Baseline target = level-1 fresh slot (HealthMax=1 → 100.5 HP). Max HP = 100 + 0.5×HealthMax. Extra M1’s from <b>Speed</b> don’t add damage.</div>
+</div>
 
     <div class="muted" style="margin-top:12px">No tracking. All math runs locally in your browser.</div>
   </div>
@@ -358,6 +411,83 @@
 
   // Resize redraw
   window.addEventListener('resize', () => { drawAllCharts(); }, {passive:true});
+<script>
+// ---- ensure these exist already from your calculators ----
+// const SCALE, M_BASE, M_COEF, M_EXP, M_LVL
+// const K_BASE, K_COEF, K_EXP, K_LVL
+// function multMelee(R){...} function multKi(R){...}
+
+// ---------- HP helpers ----------
+const BASE_HP_H1 = 100 + 0.5*1;       // 100.5 HP at HealthMax=1 (fresh slot)
+const maxHP = H => 100 + 0.5*Math.max(0, H);
+
+// ---------- Attacker combo vs baseline ----------
+function meleeComboPct(attLvl, melee){
+  const extraRaw = M_COEF * Math.pow(Math.max(0, melee), M_EXP);
+  const lvlRaw   = M_LVL  * Math.max(0, attLvl);
+  return SCALE * (M_BASE + extraRaw + lvlRaw);   // % of baseline HP
+}
+function kiComboPct(attLvl, ki){
+  const extraRaw = K_COEF * Math.pow(Math.max(0, ki), K_EXP);
+  const lvlRaw   = K_LVL  * Math.max(0, attLvl);
+  return SCALE * (K_BASE + extraRaw + lvlRaw);   // % of baseline HP
+}
+
+// ---------- tiny melee level-diff factor (optional) ----------
+function multMeleeWithLevel(R, dL, enabled){
+  const base = multMelee(R);
+  const fac  = enabled ? (1 + 0.001 * dL) : 1.0; // ≈ +0.1% per level (small)
+  return Math.max(0, base * fac);
+}
+
+// ---------- Predict % HP lost (attacker -> defender) ----------
+function predictMelee(att, def, useLevelPen){
+  const comboPct = meleeComboPct(att.lvl, att.melee);
+  const comboHP  = (comboPct/100) * BASE_HP_H1;
+  const dL = att.lvl - def.lvl;
+  const mult = multMeleeWithLevel(def.resM, dL, useLevelPen);
+  const dmgHP = comboHP * mult;
+  return 100 * dmgHP / maxHP(def.hp);
+}
+function predictKi(att, def){
+  const comboPct = kiComboPct(att.lvl, att.ki);
+  const comboHP  = (comboPct/100) * BASE_HP_H1;
+  const mult = multKi(def.resK);
+  const dmgHP = comboHP * mult;
+  return 100 * dmgHP / maxHP(def.hp);
+}
+
+// ---------- UI wiring ----------
+function readChar(prefix){
+  return {
+    lvl:  parseFloat(document.getElementById(prefix+'_lvl').value||0),
+    hp:   parseFloat(document.getElementById(prefix+'_hp').value||0),
+    melee:parseFloat(document.getElementById(prefix+'_melee').value||0),
+    ki:   parseFloat(document.getElementById(prefix+'_ki').value||0),
+    resM: parseFloat(document.getElementById(prefix+'_resM').value||0),
+    resK: parseFloat(document.getElementById(prefix+'_resK').value||0),
+  };
+}
+const fmtPct = x => (Number.isFinite(x)? x.toFixed(2)+'%' : '–');
+
+function runSim(){
+  const A = readChar('A');
+  const B = readChar('B');
+  const usePen = document.getElementById('useLevelPen').checked;
+
+  const ABm = predictMelee(A, B, usePen);
+  const ABk = predictKi(A, B);
+  const BAm = predictMelee(B, A, usePen);
+  const BAk = predictKi(B, A);
+
+  document.getElementById('AB_melee').textContent = fmtPct(ABm);
+  document.getElementById('AB_ki').textContent    = fmtPct(ABk);
+  document.getElementById('BA_melee').textContent = fmtPct(BAm);
+  document.getElementById('BA_ki').textContent    = fmtPct(BAk);
+}
+document.getElementById('simRun').addEventListener('click', runSim);
+</script>
+
 </script>
 </body>
 </html>
