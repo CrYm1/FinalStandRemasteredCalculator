@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Final Stand Remastered — Calculators & Battle Sim</title>
+<title>Final Stand Remastered — Calculators & Battle Sim created by CrYm0</title>
 <style>
   :root{ --bg:#0b0d10; --card:#12161c; --muted:#9aa4b2; --text:#e6edf3; --accent:#ffc24a; --line:#222a33; }
   *{box-sizing:border-box}
@@ -109,7 +109,7 @@
     <!-- INVESTMENT EFFICIENCY -->
     <div class="card">
       <h2>Investment Efficiency</h2>
-      <div class="mini">Shows the <b>actual HP gain</b> from +10 / +20 / +50 points and the cutoff where gains drop below your threshold.</div>
+      <div class="mini">Shows the <b>actual DMG gain/loss</b> from +10 / +20 / +50 points and the cutoff where gains drop below your threshold. Cutoff per +10 points invested means when the DMG gain/loss is below that number it displays it at the “Not worth” cutoff (≈ stat) </div>
 
       <div class="two-col">
         <!-- Melee Efficiency -->
@@ -120,14 +120,14 @@
             <input id="effMVal" type="number" min="0" step="1" value="100" style="max-width:140px">
             <label style="margin:0 0 0 8px">Level</label>
             <input id="effMLvl" type="number" min="0" step="1" value="100" style="max-width:100px">
-            <label style="margin:0 0 0 8px">Cutoff per +10 (HP)</label>
+            <label style="margin:0 0 0 8px">Cutoff per +10 stats</label>
             <input id="cutM" type="number" min="0" step="0.1" value="0.5" style="max-width:100px">
             <button class="btn" id="effMBtn">Check</button>
           </div>
           <div class="stats">
-            <div class="stat"><div class="label">+10 → combo gain (HP)</div><div class="value" id="effM10">–</div></div>
-            <div class="stat"><div class="label">+20 → combo gain (HP)</div><div class="value" id="effM20">–</div></div>
-            <div class="stat"><div class="label">+50 → combo gain (HP)</div><div class="value" id="effM50">–</div></div>
+            <div class="stat"><div class="label">+10 Stat points → combo gain</div><div class="value" id="effM10">–</div></div>
+            <div class="stat"><div class="label">+20 Stat points → combo gain</div><div class="value" id="effM20">–</div></div>
+            <div class="stat"><div class="label">+50 Stat points → combo gain</div><div class="value" id="effM50">–</div></div>
             <div class="stat"><div class="label">“Not worth” cutoff (≈ stat)</div><div class="value" id="effMCut">–</div></div>
           </div>
         </div>
@@ -140,14 +140,14 @@
             <input id="effKVal" type="number" min="0" step="1" value="150" style="max-width:140px">
             <label style="margin:0 0 0 8px">Level</label>
             <input id="effKLvl" type="number" min="0" step="1" value="100" style="max-width:100px">
-            <label style="margin:0 0 0 8px">Cutoff per +10 (HP)</label>
+            <label style="margin:0 0 0 8px">Cutoff per +10 stats</label>
             <input id="cutK" type="number" min="0" step="0.1" value="0.5" style="max-width:100px">
             <button class="btn" id="effKBtn">Check</button>
           </div>
           <div class="stats">
-            <div class="stat"><div class="label">+10 → combo gain (HP)</div><div class="value" id="effK10">–</div></div>
-            <div class="stat"><div class="label">+20 → combo gain (HP)</div><div class="value" id="effK20">–</div></div>
-            <div class="stat"><div class="label">+50 → combo gain (HP)</div><div class="value" id="effK50">–</div></div>
+            <div class="stat"><div class="label">+10 Stat points → combo gain</div><div class="value" id="effK10">–</div></div>
+            <div class="stat"><div class="label">+20 Stat points → combo gain</div><div class="value" id="effK20">–</div></div>
+            <div class="stat"><div class="label">+50 Stat points → combo gain</div><div class="value" id="effK50">–</div></div>
             <div class="stat"><div class="label">“Not worth” cutoff (≈ stat)</div><div class="value" id="effKCut">–</div></div>
           </div>
         </div>
@@ -169,9 +169,9 @@
               <button class="btn" id="effRMBtn">Check</button>
             </div>
             <div class="stats">
-              <div class="stat"><div class="label">Base damage (HP) from Lv1 1/1</div><div class="value" id="effRMbase">–</div></div>
-              <div class="stat"><div class="label">Damage now (HP)</div><div class="value" id="effRMnow">–</div></div>
-              <div class="stat"><div class="label">+10 → damage change (HP)</div><div class="value" id="effRM10">–</div></div>
+              <div class="stat"><div class="label">Base damage taken at 1 Resistance</div><div class="value" id="effRMbase">–</div></div>
+              <div class="stat"><div class="label">Damage taken now</div><div class="value" id="effRMnow">–</div></div>
+              <div class="stat"><div class="label">+10 → damage change</div><div class="value" id="effRM10">–</div></div>
               <div class="stat"><div class="label">+10 → mitigation gain (p.p.)</div><div class="value" id="effRM10p">–</div></div>
               <div class="stat"><div class="label">Cutoff (≈ Res)</div><div class="value" id="effRMCut">–</div></div>
             </div>
@@ -187,15 +187,15 @@
               <button class="btn" id="effRKBtn">Check</button>
             </div>
             <div class="stats">
-              <div class="stat"><div class="label">Base damage (HP) from Lv1 1/1</div><div class="value" id="effRKbase">–</div></div>
-              <div class="stat"><div class="label">Damage now (HP)</div><div class="value" id="effRKnow">–</div></div>
-              <div class="stat"><div class="label">+10 → damage change (HP)</div><div class="value" id="effRK10">–</div></div>
+              <div class="stat"><div class="label">Base damage taken at 1 Resistance</div><div class="value" id="effRKbase">–</div></div>
+              <div class="stat"><div class="label">Damage taken now</div><div class="value" id="effRKnow">–</div></div>
+              <div class="stat"><div class="label">+10 → damage change</div><div class="value" id="effRK10">–</div></div>
               <div class="stat"><div class="label">+10 → mitigation gain (p.p.)</div><div class="value" id="effRK10p">–</div></div>
               <div class="stat"><div class="label">Cutoff (≈ Res)</div><div class="value" id="effRKCut">–</div></div>
             </div>
           </div>
         </div>
-        <div class="mini" style="margin-top:6px">Mitigation p.p. = percentage-point increase in mitigation from +10 Resistance, attacker fixed to Lv1 with 1 Melee / 1 Ki.</div>
+        <div class="mini" style="margin-top:6px">Mitigation p.p. = percentage-point increase in mitigation from +10 Resistance, attacker fixed to LvL 1 with 1 Melee / 1 Ki dmg.</div>
       </div>
     </div>
 
@@ -259,7 +259,7 @@
         </div>
       </div>
 
-      <div class="sidenote">* Max HP = 100 + 0.5×HealthMax. Resistances use tested curves;</div>
+      <div class="sidenote">* Max HP = 100 + 0.5×HealthMax. Resistances use tested curves; Numbers are not final/scaling is not 100% correct</div>
     </div>
 
     <div class="muted" style="margin-top:12px">No tracking. All math runs locally in your browser.</div>
