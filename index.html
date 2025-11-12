@@ -97,6 +97,26 @@ input:focus,select:focus{ border-color:#2b86ff }
 @media (min-width: 2000px){
   html{ font-size: 16px; }
 }
+  /* === Compact stat input fields === */
+input[type="number"],
+input[type="text"],
+select {
+  font-size: 14px;
+  padding: 6px 8px;        /* smaller height */
+  height: 34px;            /* consistent vertical size */
+  border-radius: 8px;      /* tighter rounding */
+  background: #0f1318;
+  border: 1px solid var(--line);
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
 </style>
 </head>
 <body>
