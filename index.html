@@ -117,6 +117,40 @@ select:focus {
   border-color: var(--accent);
   outline: none;
 }
+/* === Ultrawide / large desktop tuning === */
+
+/* 1) Let the main container breathe on big screens */
+.wrap{
+  /* grows with screen but never exceeds 1600px; still centered */
+  max-width: clamp(1200px, 80vw, 1600px);
+}
+
+/* 2) Slightly larger typography & stat numbers on big monitors */
+@media (min-width: 1600px){
+  html{ font-size: 15.5px; }           /* was ~14–15px */
+  .value{ font-size: 1.45rem; }        /* bigger numbers in stat tiles */
+}
+
+/* 3) Keep the two-column calculators comfy (avoid squished cards) */
+.two-col{
+  grid-template-columns: repeat(2, minmax(380px, 1fr)); /* wider min width */
+  gap: 18px;
+}
+
+/* 4) Let stats tiles flow nicely across the wider row */
+.stats{
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* 5) Inputs stay compact even as the page widens */
+input[type="number"],
+input[type="text"],
+select{
+  font-size: 14px;
+  padding: 6px 8px;
+  height: 34px;
+  border-radius: 8px;
+}
 </style>
 </head>
 <body>
