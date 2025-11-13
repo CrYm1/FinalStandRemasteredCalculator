@@ -434,3 +434,127 @@ function multMelee(R){
   // fallback (should never hit)
   return MULT[MULT.length - 1];
 }
+
+  function multKi(R){
+    const x = Math.max(0, R);
+    return 1 / (1 + 0.0008*x + 0.00004*x*x);
+  }
+
+  const maxHP = H => 100 + 0.5*Math.max(0, H);
+
+  const fmt    = x => Number.isFinite(x) ? (Math.round(x*100)/100).toFixed(2) : '–';
+  const fmtPct = x => Number.isFinite(x) ? (Math.round(x*100)/100).toFixed(2)+'%' : '–';
+  function fmtHPpct(dmgHP, hpMax){
+    if (!Number.isFinite(dmgHP) || !Number.isFinite(hpMax) || hpMax <= 0) return '–';
+    const hp  = (Math.round(dmgHP*100)/100).toFixed(2);
+    const pct = (Math.round((dmgHP/hpMax*100)*100)/100).toFixed(2);
+    return `${hp} (${pct}%)`;
+  }
+
+  // =================== MELEE CALCULATOR ===================
+  function calcMelee(){
+    const melee = +document.getElementById('melee').value || 0;
+
+    const baseCombo = meleeComboHP(melee);
+    const combo10   = meleeComboHP(melee + 10);
+    const combo50   = meleeComboHP(melee + 50);
+    const combo100  = meleeComboHP(melee + 100);
+
+    document.getElementById('m_total').textContent   = fmt(baseCombo);
+    document.getElementById('m_plus10').textContent  = fmt(combo10);
+    document.getElementById('m_plus50').textContent  = fmt(combo50);
+    document.getElementById('m_plus100').textContent = fmt(combo100);
+  }
+
+  // =================== KI CALCULATOR ===================
+  function calcKi(){
+    const ki    = +document.getElementById('ki').value || 0;
+    const level = +document.getElementById('levelK').value || 0;
+
+    const comboHP = kiComboHP(level, ki);
+    const perHit  = comboHP / 4;
+    const fromLevel = pctToHP(SCALE * (K_LVL*Math.max(0,level)));
+    const fromKi    = pctToHP(SCALE * (K_COEF*Math.pow(Math.max(0,ki), K_EXP)));
+
+    document.getElementById('k_total').textContent = fmt(comboHP);
+    document.getElementById('k_hit').textContent   = fmt(perHit);
+    document.getElementById('k_lvl').textContent   = fmt(fromLevel);
+    document.getElementById('k_ki').textContent    = fmt(fromKi);
+  }
+
+  document.getElementById('calcMelee').addEventListener('click', calcMelee);
+  document.getElementById('calcKi').addEventListener('click', calcKi);
+
+  // =================== MELEE RESISTANCE TAB ===================
+  function calcRes(){
+    const attMelee = +document.getElementById('r_attMelee').value || 0;
+    const baseRes  = +document.getElementById('r_res').value || 0;
+    const hpStat   = +document.getElementById('r_hp').value || 0;
+
+    const hpMax = maxHP(hpStat);
+    const baseCombo = meleeComboHP(attMelee);  // raw HP vs 100 HP dummy
+
+    const dNow   = baseCombo * multMelee(baseRes);
+    const d10    = baseCombo * multMelee(baseRes + 10);
+    const d50    = baseCombo * multMelee(baseRes + 50);
+    const d100   = baseCombo * multMelee(baseRes + 100);
+
+    document.getElementById('r_now').textContent  = fmtHPpct(dNow, hpMax);
+    document.getElementById('r_10').textContent   = fmtHPpct(d10, hpMax);
+    document.getElementById('r_50').textContent   = fmtHPpct(d50, hpMax);
+    document.getElementById('r_100').textContent  = fmtHPpct(d100, hpMax);
+  }
+  document.getElementById('calcRes').addEventListener('click', calcRes);
+
+  // =================== BATTLE SIMULATOR ===================
+  function predictMelee(att, def){
+    const comboHP = meleeComboHP(att.melee);      // raw HP damage from attacker
+    const mult    = multMelee(def.resM);
+    const dmgHP   = comboHP * mult;
+    return 100 * dmgHP / maxHP(def.hp);           // % of defender's real HP
+  }
+
+  function predictKi(att, def){
+    const effLvl = att.lvl * CAL.KI_LEVEL_FACTOR;
+    const comboHP = kiComboHP(effLvl, att.ki);
+    const mult    = multKi(def.resK);
+    const dmgHP   = comboHP * mult;
+    const pct     = 100 * dmgHP / maxHP(def.hp);
+    return pct * CAL.KI_PCT_SCALE;
+  }
+
+  function readChar(prefix){
+    return {
+      lvl:  +document.getElementById(prefix+'_lvl').value || 0,
+      hp:   +document.getElementById(prefix+'_hp').value || 0,
+      melee:+document.getElementById(prefix+'_melee').value || 0,
+      ki:   +document.getElementById(prefix+'_ki').value || 0,
+      resM: +document.getElementById(prefix+'_resM').value || 0,
+      resK: +document.getElementById(prefix+'_resK').value || 0,
+    };
+  }
+
+  function runSim(){
+    const A = readChar('A');
+    const B = readChar('B');
+
+    const ABm = predictMelee(A,B);
+    const ABk = predictKi(A,B);
+    const BAm = predictMelee(B,A);
+    const BAk = predictKi(B,A);
+
+    document.getElementById('AB_melee').textContent = fmtPct(ABm);
+    document.getElementById('AB_ki').textContent    = fmtPct(ABk);
+    document.getElementById('BA_melee').textContent = fmtPct(BAm);
+    document.getElementById('BA_ki').textContent    = fmtPct(BAk);
+  }
+  document.getElementById('simRun').addEventListener('click', runSim);
+
+  // =================== INIT ===================
+  calcMelee();
+  calcKi();
+  calcRes();
+  runSim();
+</script>
+</body>
+</html>
